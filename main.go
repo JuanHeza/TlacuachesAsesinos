@@ -39,6 +39,7 @@ func main() {
 		panic(err)
 	}
 	r := gin.Default()
+	fmt.Println(botInit())
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "pong",
@@ -57,10 +58,6 @@ func main() {
 		}
 	})
 	r.Run() // listen and serve on 0.0.0.0:8080
-}
-
-func BotTerminal() {
-
 }
 
 func Encode(b []byte) string {
@@ -112,6 +109,6 @@ func IsValid(text string) bool {
 	}
 }
 
-func generateCode(){
-    return 
+func generateCode() {
+	return
 }
