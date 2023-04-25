@@ -3,29 +3,127 @@ package main
 import (
 	"fmt"
 	"log"
+	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	qrcode "github.com/skip2/go-qrcode"
 )
 
+type Step struct {
+	message  string
+	keyboard tgbotapi.InlineKeyboardMarkup
+}
+
+type Registro struct {
+	Nombre         string
+	Motivo         string
+	Company        string
+	Calle          string
+	NumeroExterior int16
+	Folio          int64
+	AutoFabricante string
+	Color          string
+	FechaEntrada   time.Time
+	HoraEntrada    time.Time
+	Identificacion string
+	FotoVehiculo   string
+	Observaciones  string
+}
+
+func (rg *Registro) printEntradaMesage() string {
+	return fmt.Sprintf("Nombre:\n%s\n\nCompañia:\n%s\n\nMotivo:\n%s\n\nCalle:\n%s\n\nNumero Exterior:\n%v", rg.Nombre, rg.Company, rg.Motivo, rg.Calle, rg.NumeroExterior)
+}
+
 var (
-	startKeyboard tgbotapi.InlineKeyboardMarkup = tgbotapi.NewInlineKeyboardMarkup(
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("Generar QR", string(const_qrCode)),
-		),
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("Registrar Direccion", string(const_rgtDir)),
-		),
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("Registrar Visitante", string(const_rgtVst)),
-		),
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("Registrar Salida", string(const_rgtSld)),
-		),
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("\xF0\x9F\x87\xAA\xF0\x9F\x87\xB8", string(const_langEs)),
-			tgbotapi.NewInlineKeyboardButtonData("\xF0\x9F\x87\xBA\xF0\x9F\x87\xB8", string(const_langEn)),
-		))
+	homeMessage = Step{
+		message: textos["es"]["saludo"],
+		keyboard: tgbotapi.NewInlineKeyboardMarkup(
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData("Generar QR", string(const_qrCode)),
+			),
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData("Registrar Entrada", string(const_rgtDir)),
+			),
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData("Registrar Visitante", string(const_rgtVst)),
+			),
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData("Registrar Salida", string(const_rgtSld)),
+			),
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData("\xF0\x9F\x87\xAA\xF0\x9F\x87\xB8", string(const_langEs)),
+				tgbotapi.NewInlineKeyboardButtonData("\xF0\x9F\x87\xBA\xF0\x9F\x87\xB8", string(const_langEn)),
+			)),
+	}
+
+	entradaMessage = Step{
+		message: "Ingrese la siguiente informacion",
+		keyboard: tgbotapi.NewInlineKeyboardMarkup(
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData("Nombre", string(const_qrCode)),
+			),
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData("Compañia", string(const_rgtDir)),
+			),
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData("Motivo", string(const_rgtDir)),
+			),
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData("Calle", string(const_rgtVst)),
+			),
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData("Numero Exterior", string(const_back)),
+			),
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData("Aceptar", string(const_back)),
+				tgbotapi.NewInlineKeyboardButtonData("Cancelar", string(const_back)),
+			)),
+	}
+
+	visitanteMessage = Step{
+		message: "Ingrese la siguiente informacion",
+		keyboard: tgbotapi.NewInlineKeyboardMarkup(
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData("Marca del vehiculo", string(const_qrCode)),
+			),
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData("Color", string(const_rgtDir)),
+			),
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData("Fecha Entrada", string(const_rgtDir)),
+			),
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData("Hora Entrada", string(const_rgtVst)),
+			),
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData("Identificacion", string(const_back)),
+			),
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData("Vehiculo", string(const_back)),
+			),
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData("Observaciones", string(const_back)),
+			),
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData("Aceptar", string(const_back)),
+				tgbotapi.NewInlineKeyboardButtonData("Cancelar", string(const_back)),
+			)),
+	}
+
+	salidaMessage = Step{
+		message: "Ingrese la siguiente informacion",
+		keyboard: tgbotapi.NewInlineKeyboardMarkup(
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData("Fecha Salida", string(const_qrCode)),
+			),
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData("Hora Salida", string(const_rgtDir)),
+			),
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData("Aceptar", string(const_back)),
+				tgbotapi.NewInlineKeyboardButtonData("Cancelar", string(const_back)),
+			)),
+	}
 	msg tgbotapi.MessageConfig
 )
 
@@ -79,8 +177,8 @@ func handleMessage(update tgbotapi.Update) tgbotapi.MessageConfig {
 }
 
 func startCommand(Id int64) tgbotapi.MessageConfig {
-	msg = tgbotapi.NewMessage(Id, textos["es"]["saludo"])
-	msg.ReplyMarkup = startKeyboard
+	msg = tgbotapi.NewMessage(Id, homeMessage.message)
+	msg.ReplyMarkup = homeMessage.keyboard
 	return msg
 }
 
@@ -88,14 +186,45 @@ func handleCallback(update tgbotapi.Update, bot *tgbotapi.BotAPI) tgbotapi.Messa
 	fmt.Println(update.CallbackData())
 	switch toInline(update.CallbackData()) {
 	case const_qrCode:
-		encoded, _ := qrcode.Encode("https://example.org", qrcode.Medium, 256)
-		file := tgbotapi.FileBytes{
-			Name:  "image.jpg",
-			Bytes: encoded,
+		now := fmt.Sprintf("%v%s", time.Now().Unix(), session_key)
+		fmt.Println(now)
+		encText, err := Encrypt(now, key)
+		fmt.Println(encText)
+		if err != nil {
+			msg.Text = fmt.Sprint("error encrypting your classified text: ", err)
+		} else {
+			encoded, _ := qrcode.Encode(encText, qrcode.Medium, 256)
+			file := tgbotapi.FileBytes{
+				Name:  "QR_CODE.jpg",
+				Bytes: encoded,
+			}
+			pic := tgbotapi.NewInputMediaPhoto(file)
+			pic.Caption = "Este mensaje se eliminara en 5 segundos"
+			msgPic, err := bot.SendMediaGroup(tgbotapi.NewMediaGroup(update.CallbackQuery.From.ID, []interface{}{pic}))
+			if err == nil {
+				go delaySecond(msgPic, bot) // very useful for interval polling
+			}
 		}
-		bot.SendMediaGroup(tgbotapi.NewMediaGroup(update.CallbackQuery.From.ID, []interface{}{tgbotapi.NewInputMediaPhoto(file)}))
-
+		break
+	case const_rgtDir:
+		dir := Registro{}
+		msg := tgbotapi.NewEditMessageTextAndMarkup(update.CallbackQuery.From.ID, update.CallbackQuery.Message.MessageID, entradaMessage.message+"\n"+dir.printEntradaMesage(), entradaMessage.keyboard)
+		bot.Send(msg)
+		break
+	case const_back:
+		msg := tgbotapi.NewEditMessageTextAndMarkup(update.CallbackQuery.From.ID, update.CallbackQuery.Message.MessageID, homeMessage.message, homeMessage.keyboard)
+		bot.Send(msg)
+		break
 	}
 	return msg
 
+}
+
+func delaySecond(msgs []tgbotapi.Message, bot *tgbotapi.BotAPI) {
+	for _ = range time.Tick(time.Duration(const_delay) * time.Second) {
+		for _, msx := range msgs {
+			delete := tgbotapi.NewDeleteMessage(msx.Chat.ID, msx.MessageID)
+			bot.Send(delete)
+		}
+	}
 }
