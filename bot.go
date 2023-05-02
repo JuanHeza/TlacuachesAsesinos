@@ -224,9 +224,6 @@ func handleMessage(update tgbotapi.Update) (tgbotapi.Chattable, bool) {
 		msg = startCommand(update.Message.Chat.ID)
 	default:
 		if actualQuery != "" {
-			//msg = tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("%v \xF0\x9F\x87\xBA\xF0\x9F\x87\xB8", update.Message.Text))
-			//msg.ReplyToMessageID = update.Message.MessageID
-			//} else {
 			actualReg.fillRegistro(toInline(actualQuery), update.Message.Text)
 			data := entradaMessage()
 			return tgbotapi.NewEditMessageTextAndMarkup(chatId, int(messageId), actualReg.printEntradaMesage(data.message), data.keyboard), true
