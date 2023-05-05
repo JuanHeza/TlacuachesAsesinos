@@ -25,8 +25,8 @@ type Registro struct {
 	NumeroExterior int
 	AutoFabricante string
 	Color          string
-    entrada time.Time
-    salida time.Time
+	entrada        time.Time
+	salida         time.Time
 	FechaEntrada   time.Time
 	HoraEntrada    time.Time
 	FechaSalida    time.Time
@@ -41,9 +41,21 @@ func (rg *Registro) printEntradaMesage(msg string) string {
 }
 
 func (rg *Registro) printDireccionMesage(msg string) string {
-    fotoVehiculo := func()string{if rg.FotoVehiculo != "" { return "OK"}else{return "NO"}}
-    identificacion := func()string{if rg.Identificacion != "" { return "OK"}else{return "NO"}}
-	return fmt.Sprintf("%s\n\n%s:\n%s\n\n%s:\n%s\n\n%s:\n%s\n\n%s:\n%s\n\n%s:\n%v\n\n%s:\n%v\n\n%s:\n%s", msg, textos[idioma][const_rgtNom], rg.AutoFabricante, textos[idioma][const_rgtCom], rg.Color, textos[idioma][const_rgtMot], rg.FechaEntrada, textos[idioma][const_rgtCll], rg.HoraEntrada, textos[idioma][const_rgtExt], identificacion(), textos[idioma][const_rgtExt], fotoVehiculo(), textos[idioma][const_rgtExt], rg.Observaciones)
+	fotoVehiculo := func() string {
+		if rg.FotoVehiculo != "" {
+			return "OK"
+		} else {
+			return "NO"
+		}
+	}
+	identificacion := func() string {
+		if rg.Identificacion != "" {
+			return "OK"
+		} else {
+			return "NO"
+		}
+	}
+	return fmt.Sprintf("%s\n\n%s:\n%s\n\n%s:\n%s\n\n%s:\n%s\n\n%s:\n%s\n\n%s:\n%v\n\n%s:\n%v\n\n%s:\n%s", msg, textos[idioma][const_rgtFbr], rg.AutoFabricante, textos[idioma][const_rgtClr], rg.Color, textos[idioma][const_rgtFen], rg.FechaEntrada, textos[idioma][const_rgtHen], rg.HoraEntrada, textos[idioma][const_rgtIdn], identificacion(), textos[idioma][const_rgtVhc], fotoVehiculo(), textos[idioma][const_rgtObs], rg.Observaciones)
 }
 
 func (rg *Registro) printSalidaMesage(msg string) string {

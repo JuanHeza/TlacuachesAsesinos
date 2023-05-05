@@ -25,6 +25,15 @@ const (
 	const_rgtMot        Inline = "motvio"
 	const_rgtCll        Inline = "calle"
 	const_rgtExt        Inline = "exterior"
+	const_rgtFbr        Inline = "Fabricante"
+	const_rgtClr        Inline = "Color"
+	const_rgtFen        Inline = "FechaEntrada"
+	const_rgtHen        Inline = "HoraEntrada"
+	const_rgtFsl        Inline = "FechaSalida"
+	const_rgtHsl        Inline = "HoraSalida"
+	const_rgtIdn        Inline = "Identificacion"
+	const_rgtVhc        Inline = "Vehiculo"
+	const_rgtObs        Inline = "Observaciones"
 
 	const_rgt Inline = ""
 
@@ -67,20 +76,29 @@ var (
 			const_salida:    string(const_saludoSalida),
 
 			const_qrCode: "Generate QR Code",
-			const_rgtSld: "Register Exit",
+			const_rgtSld: "Register Departure",
 			const_rgtVst: "Register Visit",
-			const_rgtDir: "Register Entrance",
+			const_rgtDir: "Register Entry",
 
 			const_saludo: "hello",
 			const_error:  "Unknow Error",
 
 			const_entrada:   string(const_saludoEntrada),
-			const_solicitud: "Please write the ",
+			const_solicitud: "Please enter ",
 			const_rgtNom:    "Name",
 			const_rgtCom:    "Company Name",
 			const_rgtMot:    "Motive of Visit",
 			const_rgtCll:    "Street Name",
 			const_rgtExt:    "Exterior Number",
+			const_rgtFbr:    "Manufacturer",
+			const_rgtClr:    "Color",
+			const_rgtFen:    "Entry date",
+			const_rgtHen:    "Entry time",
+			const_rgtFsl:    "Departure date",
+			const_rgtHsl:    "Departure time",
+			const_rgtIdn:    "Identification",
+			const_rgtVhc:    "Vehicle",
+			const_rgtObs:    "Observations",
 
 			const_sldHra: "Register Exit hour",
 			const_sldFch: "Register Exit date",
@@ -99,12 +117,21 @@ var (
 			const_error:  "Error Desconocido",
 
 			const_entrada:   string(const_saludoEntrada),
-			const_solicitud: "Por favor ingrese el ",
+			const_solicitud: "Por favor ingrese ",
 			const_rgtNom:    "Nombre",
 			const_rgtCom:    "Compañia",
 			const_rgtMot:    "Motivo",
 			const_rgtCll:    "nombre de la Calle",
 			const_rgtExt:    "Numero exterior",
+			const_rgtFbr:    "Fabricante",
+			const_rgtClr:    "Color",
+			const_rgtFen:    "Fecha Entrada",
+			const_rgtHen:    "Hora Entrada",
+			const_rgtFsl:    "Fecha Salida",
+			const_rgtHsl:    "Hora Salida",
+			const_rgtIdn:    "Identificacion",
+			const_rgtVhc:    "Vehiculo",
+			const_rgtObs:    "Observaciones",
 
 			const_sldHra: "Registrar Hora de salida",
 			const_sldFch: "Registrar Fecha de salida",
@@ -126,7 +153,7 @@ func toInline(data string) Inline {
 }
 
 func inputMessage(msg Inline) string {
-	return textos[idioma][const_solicitud] + textos[idioma][msg]
+	return textos[idioma][const_solicitud] + "*" + textos[idioma][msg] + "*"
 }
 
 func printMes(mes int) string {
