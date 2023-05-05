@@ -17,14 +17,16 @@ type Step struct {
 }
 
 type Registro struct {
+	Folio          int64
 	Nombre         string
 	Motivo         string
 	Company        string
 	Calle          string
 	NumeroExterior int
-	Folio          int64
 	AutoFabricante string
 	Color          string
+    entrada time.Time
+    salida time.Time
 	FechaEntrada   time.Time
 	HoraEntrada    time.Time
 	FechaSalida    time.Time
@@ -36,6 +38,12 @@ type Registro struct {
 
 func (rg *Registro) printEntradaMesage(msg string) string {
 	return fmt.Sprintf("%s\n\n%s:\n%s\n\n%s:\n%s\n\n%s:\n%s\n\n%s:\n%s\n\n%s:\n%v", msg, textos[idioma][const_rgtNom], rg.Nombre, textos[idioma][const_rgtCom], rg.Company, textos[idioma][const_rgtMot], rg.Motivo, textos[idioma][const_rgtCll], rg.Calle, textos[idioma][const_rgtExt], rg.NumeroExterior)
+}
+
+func (rg *Registro) printDireccionMesage(msg string) string {
+    fotoVehiculo := func()string{if rg.FotoVehiculo != "" { return "OK"}else{return "NO"}}
+    identificacion := func()string{if rg.Identificacion != "" { return "OK"}else{return "NO"}}
+	return fmt.Sprintf("%s\n\n%s:\n%s\n\n%s:\n%s\n\n%s:\n%s\n\n%s:\n%s\n\n%s:\n%v\n\n%s:\n%v\n\n%s:\n%s", msg, textos[idioma][const_rgtNom], rg.AutoFabricante, textos[idioma][const_rgtCom], rg.Color, textos[idioma][const_rgtMot], rg.FechaEntrada, textos[idioma][const_rgtCll], rg.HoraEntrada, textos[idioma][const_rgtExt], identificacion(), textos[idioma][const_rgtExt], fotoVehiculo(), textos[idioma][const_rgtExt], rg.Observaciones)
 }
 
 func (rg *Registro) printSalidaMesage(msg string) string {

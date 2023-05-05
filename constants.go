@@ -126,7 +126,7 @@ func toInline(data string) Inline {
 }
 
 func inputMessage(msg Inline) string {
-	return textos[idioma][const_saludo] + textos[idioma][msg]
+	return textos[idioma][const_solicitud] + textos[idioma][msg]
 }
 
 func printMes(mes int) string {
