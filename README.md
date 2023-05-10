@@ -1,5 +1,7 @@
 # TlacuachesAsesinos
 
+https://wepik.com/es/inteligencia-artificial
+
 https://www.yunzii.com/products/yunzii-actto-b703-retro-typewriter-mechanical-keyboard?variant=44359017988338
 
 https://www.amazon.com.mx/EPOMAKER-Intercambiable-Bluetooth-retroiluminaci%C3%B3n-interruptor/dp/B0BS18JCZ6/ref=d_pd_day0_sccl_3_3/134-5768482-1243942?pd_rd_w=Iyh1v&content-id=amzn1.sym.1c8f9346-a87e-48c7-994a-82c93e96af91&pf_rd_p=1c8f9346-a87e-48c7-994a-82c93e96af91&pf_rd_r=FANY55HT746VF90TRE1F&pd_rd_wg=X4fiM&pd_rd_r=fbd8a621-d364-4ace-bdc6-a412abbd7316&pd_rd_i=B0BS18KHNP&th=1
