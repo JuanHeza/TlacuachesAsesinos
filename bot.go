@@ -2,6 +2,7 @@ package main
 
 import (
 	"TlacuachesAsesinos/constants"
+	"TlacuachesAsesinos/database"
 	"TlacuachesAsesinos/model"
 	"fmt"
 	"log"
@@ -11,117 +12,13 @@ import (
 	qrcode "github.com/skip2/go-qrcode"
 )
 
-type Step struct {
-	name     constants.Inline
-	message  string
-	keyboard tgbotapi.InlineKeyboardMarkup
-}
-
 var (
 	actualQuery = ""
 	actualReg   = model.Registro{}
 	actualForm  constants.Inline
 	messageId   int
 	chatId      int64
-	homeMessage = func() Step {
-		return Step{
-			name:    constants.Const_home,
-			message: constants.Textos[constants.Idioma][constants.Const_home],
-			keyboard: tgbotapi.NewInlineKeyboardMarkup(
-				tgbotapi.NewInlineKeyboardRow(
-					tgbotapi.NewInlineKeyboardButtonData(constants.Textos[constants.Idioma][constants.Const_qrCode], string(constants.Const_qrCode)),
-				),
-				tgbotapi.NewInlineKeyboardRow(
-					tgbotapi.NewInlineKeyboardButtonData(constants.Textos[constants.Idioma][constants.Const_rgtDir], string(constants.Const_rgtDir)),
-				),
-				tgbotapi.NewInlineKeyboardRow(
-					tgbotapi.NewInlineKeyboardButtonData(constants.Textos[constants.Idioma][constants.Const_rgtVst], string(constants.Const_rgtVst)),
-				),
-				tgbotapi.NewInlineKeyboardRow(
-					tgbotapi.NewInlineKeyboardButtonData(constants.Textos[constants.Idioma][constants.Const_rgtSld], string(constants.Const_rgtSld)),
-				),
-				tgbotapi.NewInlineKeyboardRow(
-					tgbotapi.NewInlineKeyboardButtonData("\xF0\x9F\x87\xAA\xF0\x9F\x87\xB8", string(constants.Const_langEs)),
-					tgbotapi.NewInlineKeyboardButtonData("\xF0\x9F\x87\xBA\xF0\x9F\x87\xB8", string(constants.Const_langEn)),
-				)),
-		}
-	}
-
-	miniKeyboard = tgbotapi.NewInlineKeyboardRow(
-		tgbotapi.NewInlineKeyboardButtonData("Aceptar", string(constants.Const_ok)),
-		tgbotapi.NewInlineKeyboardButtonData("Cancelar", string(constants.Const_back)),
-	)
-
-	entradaMessage = func() Step {
-		return Step{
-			name:    constants.Const_entrada,
-			message: constants.Textos[constants.Idioma][constants.Const_entrada],
-			keyboard: tgbotapi.NewInlineKeyboardMarkup(
-				tgbotapi.NewInlineKeyboardRow(
-					tgbotapi.NewInlineKeyboardButtonData(constants.Textos[constants.Idioma][constants.Const_rgtNom], string(constants.Const_rgtNom)),
-				),
-				tgbotapi.NewInlineKeyboardRow(
-					tgbotapi.NewInlineKeyboardButtonData(constants.Textos[constants.Idioma][constants.Const_rgtCom], string(constants.Const_rgtCom)),
-				),
-				tgbotapi.NewInlineKeyboardRow(
-					tgbotapi.NewInlineKeyboardButtonData(constants.Textos[constants.Idioma][constants.Const_rgtMot], string(constants.Const_rgtMot)),
-				),
-				tgbotapi.NewInlineKeyboardRow(
-					tgbotapi.NewInlineKeyboardButtonData(constants.Textos[constants.Idioma][constants.Const_rgtCll], string(constants.Const_rgtCll)),
-				),
-				tgbotapi.NewInlineKeyboardRow(
-					tgbotapi.NewInlineKeyboardButtonData(constants.Textos[constants.Idioma][constants.Const_rgtExt], string(constants.Const_rgtExt)),
-				),
-				miniKeyboard),
-		}
-	}
-
-	visitanteMessage = func() Step {
-		return Step{
-			name:    constants.Const_visitante,
-			message: constants.Textos[constants.Idioma][constants.Const_visitante],
-			keyboard: tgbotapi.NewInlineKeyboardMarkup(
-				tgbotapi.NewInlineKeyboardRow(
-					tgbotapi.NewInlineKeyboardButtonData("Marca del vehiculo", string(constants.Const_qrCode)),
-				),
-				tgbotapi.NewInlineKeyboardRow(
-					tgbotapi.NewInlineKeyboardButtonData("Color", string(constants.Const_rgtDir)),
-				),
-				tgbotapi.NewInlineKeyboardRow(
-					tgbotapi.NewInlineKeyboardButtonData("Fecha Entrada", string(constants.Const_rgtDir)),
-				),
-				tgbotapi.NewInlineKeyboardRow(
-					tgbotapi.NewInlineKeyboardButtonData("Hora Entrada", string(constants.Const_rgtVst)),
-				),
-				tgbotapi.NewInlineKeyboardRow(
-					tgbotapi.NewInlineKeyboardButtonData("Identificacion", string(constants.Const_back)),
-				),
-				tgbotapi.NewInlineKeyboardRow(
-					tgbotapi.NewInlineKeyboardButtonData("Vehiculo", string(constants.Const_back)),
-				),
-				tgbotapi.NewInlineKeyboardRow(
-					tgbotapi.NewInlineKeyboardButtonData("Observaciones", string(constants.Const_back)),
-				),
-				miniKeyboard),
-		}
-	}
-
-	salidaMessage = func() Step {
-		return Step{
-			name:    constants.Const_salida,
-			message: constants.Textos[constants.Idioma][constants.Const_salida],
-			keyboard: tgbotapi.NewInlineKeyboardMarkup(
-				tgbotapi.NewInlineKeyboardRow(
-					tgbotapi.NewInlineKeyboardButtonData(constants.Textos[constants.Idioma][constants.Const_sldFch], string(constants.Const_sldFch)),
-				),
-				tgbotapi.NewInlineKeyboardRow(
-					tgbotapi.NewInlineKeyboardButtonData(constants.Textos[constants.Idioma][constants.Const_sldHra], string(constants.Const_sldHra)),
-				),
-				miniKeyboard),
-		}
-	}
-
-	msg tgbotapi.MessageConfig
+	msg         tgbotapi.MessageConfig
 )
 
 func botInit() *tgbotapi.BotAPI {
@@ -175,17 +72,17 @@ func handleMessage(update tgbotapi.Update) (tgbotapi.Chattable, bool) {
 			//msg.ReplyToMessageID = update.Message.MessageID
 			//} else {
 			actualReg.FillRegistro(constants.ToInline(actualQuery), update.Message.Text)
-			data := entradaMessage()
-			return tgbotapi.NewEditMessageTextAndMarkup(chatId, int(messageId), actualReg.PrintEntradaMesage(data.message), data.keyboard), true
+			data := model.EntradaMessage()
+			return tgbotapi.NewEditMessageTextAndMarkup(chatId, int(messageId), actualReg.PrintEntradaMesage(data.Message), data.Keyboard), true
 		}
 	}
 	return msg, false
 }
 
 func startCommand(Id int64) tgbotapi.MessageConfig {
-	home := homeMessage()
-	msg = tgbotapi.NewMessage(Id, home.message)
-	msg.ReplyMarkup = home.keyboard
+	home := model.HomeMessage()
+	msg = tgbotapi.NewMessage(Id, home.Message)
+	msg.ReplyMarkup = home.Keyboard
 	return msg
 }
 
@@ -215,35 +112,36 @@ func handleCallback(update tgbotapi.Update, bot *tgbotapi.BotAPI) tgbotapi.Messa
 	case constants.Const_rgtDir:
 		actualReg := model.Registro{}
 		actualForm = constants.Const_rgtDir
-		data := entradaMessage()
-		msg := tgbotapi.NewEditMessageTextAndMarkup(update.CallbackQuery.From.ID, update.CallbackQuery.Message.MessageID, actualReg.PrintEntradaMesage(data.message), data.keyboard)
+		data := model.EntradaMessage()
+		msg := tgbotapi.NewEditMessageTextAndMarkup(update.CallbackQuery.From.ID, update.CallbackQuery.Message.MessageID, actualReg.PrintEntradaMesage(data.Message), data.Keyboard)
 		bot.Send(msg)
 	case constants.Const_rgtVst:
-		data := visitanteMessage()
-		msg := tgbotapi.NewEditMessageTextAndMarkup(update.CallbackQuery.From.ID, update.CallbackQuery.Message.MessageID, actualReg.PrintEntradaMesage(data.message), data.keyboard)
+		data := model.VisitanteMessage()
+		msg := tgbotapi.NewEditMessageTextAndMarkup(update.CallbackQuery.From.ID, update.CallbackQuery.Message.MessageID, actualReg.PrintEntradaMesage(data.Message), data.Keyboard)
 		bot.Send(msg)
 	case constants.Const_rgtSld:
-		data := salidaMessage()
-		msg := tgbotapi.NewEditMessageTextAndMarkup(update.CallbackQuery.From.ID, update.CallbackQuery.Message.MessageID, actualReg.PrintSalidaMesage(data.message), data.keyboard)
+		data := model.SalidaMessage()
+		msg := tgbotapi.NewEditMessageTextAndMarkup(update.CallbackQuery.From.ID, update.CallbackQuery.Message.MessageID, actualReg.PrintSalidaMesage(data.Message), data.Keyboard)
 		bot.Send(msg)
 	case constants.Const_back:
-		home := homeMessage()
-		msg := tgbotapi.NewEditMessageTextAndMarkup(update.CallbackQuery.From.ID, update.CallbackQuery.Message.MessageID, home.message, home.keyboard)
+		home := model.HomeMessage()
+		msg := tgbotapi.NewEditMessageTextAndMarkup(update.CallbackQuery.From.ID, update.CallbackQuery.Message.MessageID, home.Message, home.Keyboard)
 		bot.Send(msg)
 	case constants.Const_ok:
-		var data Step
+		var data model.Step
 		switch actualForm {
 		case constants.Const_rgtDir:
-			data = entradaMessage()
-			data.message = actualReg.PrintEntradaMesage(data.message)
+			data = model.EntradaMessage()
+			data.Message = actualReg.PrintEntradaMesage(data.Message)
 		case constants.Const_rgtVst:
-			data = visitanteMessage()
+			data = model.VisitanteMessage()
 		case constants.Const_rgtSld:
-			data = salidaMessage()
+			data = model.SalidaMessage()
 		default:
-			data = homeMessage()
+			data = model.HomeMessage()
 		}
-		msg := tgbotapi.NewEditMessageTextAndMarkup(update.CallbackQuery.From.ID, update.CallbackQuery.Message.MessageID, data.message, data.keyboard)
+		msg := tgbotapi.NewEditMessageTextAndMarkup(update.CallbackQuery.From.ID, update.CallbackQuery.Message.MessageID, data.Message, data.Keyboard)
+		database.Save(actualReg)
 		bot.Send(msg)
 	case constants.Const_langEs:
 		changeLenguage(update, *bot)
@@ -251,17 +149,17 @@ func handleCallback(update tgbotapi.Update, bot *tgbotapi.BotAPI) tgbotapi.Messa
 		changeLenguage(update, *bot)
 	case constants.Const_sldHra:
 		actualReg.HoraSalida = time.Now()
-		data := salidaMessage()
-		msg := tgbotapi.NewEditMessageTextAndMarkup(update.CallbackQuery.From.ID, update.CallbackQuery.Message.MessageID, actualReg.PrintSalidaMesage(data.message), data.keyboard)
+		data := model.SalidaMessage()
+		msg := tgbotapi.NewEditMessageTextAndMarkup(update.CallbackQuery.From.ID, update.CallbackQuery.Message.MessageID, actualReg.PrintSalidaMesage(data.Message), data.Keyboard)
 		bot.Send(msg)
 	case constants.Const_sldFch:
 		actualReg.FechaSalida = time.Now()
-		data := salidaMessage()
-		msg := tgbotapi.NewEditMessageTextAndMarkup(update.CallbackQuery.From.ID, update.CallbackQuery.Message.MessageID, actualReg.PrintSalidaMesage(data.message), data.keyboard)
+		data := model.SalidaMessage()
+		msg := tgbotapi.NewEditMessageTextAndMarkup(update.CallbackQuery.From.ID, update.CallbackQuery.Message.MessageID, actualReg.PrintSalidaMesage(data.Message), data.Keyboard)
 		bot.Send(msg)
 	default:
 		actualQuery = update.CallbackData()
-		msg := tgbotapi.NewEditMessageTextAndMarkup(update.CallbackQuery.From.ID, update.CallbackQuery.Message.MessageID, constants.InputMessage(constants.ToInline(actualQuery)), tgbotapi.NewInlineKeyboardMarkup(miniKeyboard))
+		msg := tgbotapi.NewEditMessageTextAndMarkup(update.CallbackQuery.From.ID, update.CallbackQuery.Message.MessageID, constants.InputMessage(constants.ToInline(actualQuery)), tgbotapi.NewInlineKeyboardMarkup(model.MiniKeyboard))
 		bot.Send(msg)
 	}
 	return msg
@@ -278,7 +176,7 @@ func delaySecond(msgs []tgbotapi.Message, bot *tgbotapi.BotAPI) {
 
 func changeLenguage(update tgbotapi.Update, bot tgbotapi.BotAPI) {
 	constants.Idioma = constants.ToInline(update.CallbackData())
-	home := homeMessage()
-	msg := tgbotapi.NewEditMessageTextAndMarkup(update.CallbackQuery.From.ID, update.CallbackQuery.Message.MessageID, home.message, home.keyboard)
+	home := model.HomeMessage()
+	msg := tgbotapi.NewEditMessageTextAndMarkup(update.CallbackQuery.From.ID, update.CallbackQuery.Message.MessageID, home.Message, home.Keyboard)
 	bot.Send(msg)
 }
