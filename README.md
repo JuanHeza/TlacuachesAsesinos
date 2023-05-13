@@ -1,5 +1,7 @@
 # TlacuachesAsesinos
 
+https://media.wizards.com/2018/dnd/downloads/DnD_BasicRules_2018.pdf
+
 https://wepik.com/es/inteligencia-artificial
 
 https://www.yunzii.com/products/yunzii-actto-b703-retro-typewriter-mechanical-keyboard?variant=44359017988338
