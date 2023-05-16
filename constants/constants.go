@@ -133,3 +133,23 @@ func InputMessage(msg Inline) string {
 func PrintMes(mes int) string {
 	return meses[Idioma][mes-1]
 }
+
+func generateCredentials(){
+    credenciales := struct {
+        Make    string `json:"make"`
+        Model   string `json:"model"`
+        Mileage string `json:"mileage"`
+    }{
+        Make:    os.Getenv("nombre"),
+        Model:   os.Getenv("modelo"),
+        Mileage: os.Getenv("mileage"),
+    }
+    
+    jsonCoded, err := json.Marshal(credenciales)
+    fmt.Println(jsonCoded, err)
+    
+    err = ioutil.WriteFile("token.json", jsonCoded, 0644)
+    if err != nil {
+        log.Fatal(err)
+    }
+}
