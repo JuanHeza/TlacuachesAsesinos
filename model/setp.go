@@ -31,6 +31,9 @@ var (
 					tgbotapi.NewInlineKeyboardButtonData(constants.Textos[constants.Idioma][constants.Const_rgtSld], string(constants.Const_rgtSld)),
 				),
 				tgbotapi.NewInlineKeyboardRow(
+					tgbotapi.NewInlineKeyboardButtonData("Ver Excel", "Excel"),
+				),
+				tgbotapi.NewInlineKeyboardRow(
 					tgbotapi.NewInlineKeyboardButtonData("\xF0\x9F\x87\xAA\xF0\x9F\x87\xB8", string(constants.Const_langEs)),
 					tgbotapi.NewInlineKeyboardButtonData("\xF0\x9F\x87\xBA\xF0\x9F\x87\xB8", string(constants.Const_langEn)),
 				)),
@@ -41,7 +44,13 @@ var (
 		tgbotapi.NewInlineKeyboardButtonData("Aceptar", string(constants.Const_ok)),
 		tgbotapi.NewInlineKeyboardButtonData("Cancelar", string(constants.Const_back)),
 	)
-
+	CancelKeyboard = func(input constants.Inline) Step {
+		return Step{
+			Name:     "",
+			Message:  "",
+			Keyboard: tgbotapi.NewInlineKeyboardMarkup(tgbotapi.NewInlineKeyboardRow(tgbotapi.NewInlineKeyboardButtonData("Cancelar", string(constants.Const_back)))),
+		}
+	}
 	EntradaMessage = func() Step {
 		return Step{
 			Name:    constants.Const_entrada,

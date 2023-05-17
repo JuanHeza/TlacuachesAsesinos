@@ -1,6 +1,7 @@
 package main
 
 import (
+	"TlacuachesAsesinos/constants"
 	"TlacuachesAsesinos/database"
 	"crypto/aes"
 	"crypto/cipher"
@@ -30,6 +31,7 @@ const (
 func main() {
 	now := fmt.Sprintf("%v%s", time.Now().Unix(), test)
 	fmt.Println(now)
+	constants.GenerateCredentials()
 	database.Connect()
 	encText, err := Encrypt(now, key)
 	fmt.Println(encText)

@@ -1,6 +1,7 @@
 package constants
 
 import (
+	"io/ioutil"
 	"os"
 
 	"encoding/json"
@@ -134,22 +135,36 @@ func PrintMes(mes int) string {
 	return meses[Idioma][mes-1]
 }
 
-func generateCredentials(){
-    credenciales := struct {
-        Make    string `json:"make"`
-        Model   string `json:"model"`
-        Mileage string `json:"mileage"`
-    }{
-        Make:    os.Getenv("nombre"),
-        Model:   os.Getenv("modelo"),
-        Mileage: os.Getenv("mileage"),
-    }
-    
-    jsonCoded, err := json.Marshal(credenciales)
-    fmt.Println(jsonCoded, err)
-    
-    err = ioutil.WriteFile("token.json", jsonCoded, 0644)
-    if err != nil {
-        log.Fatal(err)
-    }
+func GenerateCredentials() {
+	credenciales := struct {
+		Tipo         string `json:"type"`
+		ProjectoId   string `json:"project_id"`
+		PrivateKeyId string `json:"private_key_id"`
+		PrivateKey   string `json:"private_key"`
+		ClientEmail  string `json:"client_email"`
+		ClientId     string `json:"client_id"`
+		AuthUri      string `json:"auth_uri"`
+		TokenUri     string `json:"token_uri"`
+		AuthProvider string `json:"auth_provider_x509_cert_url"`
+		ClientCert   string `json:"client_x509_cert_url"`
+	}{
+		Tipo:         "service_account",
+		ProjectoId:   os.Getenv("sheet_project_id"),
+		PrivateKeyId: os.Getenv("sheet_private_key_id"),
+		PrivateKey:   os.Getenv("sheet_private_key"),
+		ClientEmail:  os.Getenv("sheet_client_email"),
+		ClientId:     os.Getenv("sheet_client_id"),
+		AuthUri:      "https://accounts.google.com/o/oauth2/auth",
+		TokenUri:     "https://oauth2.googleapis.com/token",
+		AuthProvider: "https://www.googleapis.com/oauth2/v1/certs",
+		ClientCert:   os.Getenv("sheet_client_x509_cert_url"),
+	}
+
+	jsonCoded, err := json.Marshal(credenciales)
+	fmt.Println(jsonCoded, err)
+
+	err = ioutil.WriteFile("./database/token.json", jsonCoded, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
 }

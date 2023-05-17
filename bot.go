@@ -46,7 +46,10 @@ func botInit() *tgbotapi.BotAPI {
 			msg = tgbotapi.NewMessage(update.Message.Chat.ID, "")
 			msg, status := handleMessage(update)
 
-			sended, _ := bot.Send(msg)
+			delete := tgbotapi.NewDeleteMessage(update.Message.Chat.ID, update.Message.MessageID)
+			bot.Send(delete)
+			sended, ok := bot.Send(msg)
+			fmt.Println(ok)
 			if !status {
 				chatId = sended.Chat.ID
 				messageId = sended.MessageID
@@ -157,6 +160,8 @@ func handleCallback(update tgbotapi.Update, bot *tgbotapi.BotAPI) tgbotapi.Messa
 		data := model.SalidaMessage()
 		msg := tgbotapi.NewEditMessageTextAndMarkup(update.CallbackQuery.From.ID, update.CallbackQuery.Message.MessageID, actualReg.PrintSalidaMesage(data.Message), data.Keyboard)
 		bot.Send(msg)
+	case constants.ToInline("Excel"):
+		msg = tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "https://docs.google.com/spreadsheets/d/1ytQV2XIoxR2TdiBiBIARRx5mg1v48kk7VF74eZ4LanQ/edit#gid=0")
 	default:
 		actualQuery = update.CallbackData()
 		msg := tgbotapi.NewEditMessageTextAndMarkup(update.CallbackQuery.From.ID, update.CallbackQuery.Message.MessageID, constants.InputMessage(constants.ToInline(actualQuery)), tgbotapi.NewInlineKeyboardMarkup(model.MiniKeyboard))
@@ -166,11 +171,10 @@ func handleCallback(update tgbotapi.Update, bot *tgbotapi.BotAPI) tgbotapi.Messa
 }
 
 func delaySecond(msgs []tgbotapi.Message, bot *tgbotapi.BotAPI) {
-	for range time.Tick(time.Duration(constants.Const_delay) * time.Second) {
-		for _, msx := range msgs {
-			delete := tgbotapi.NewDeleteMessage(msx.Chat.ID, msx.MessageID)
-			bot.Send(delete)
-		}
+	time.Sleep(time.Duration(constants.Const_delay) * time.Second)
+	for _, msx := range msgs {
+		delete := tgbotapi.NewDeleteMessage(msx.Chat.ID, msx.MessageID)
+		bot.Send(delete)
 	}
 }
 

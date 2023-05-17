@@ -1,2 +1,4 @@
 *.json
 launch.go
+*.json
+.vscode/launch.json

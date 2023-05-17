@@ -90,7 +90,7 @@ func Save(rg model.Registro) {
 }
 
 func Connect() {
-	data, err := ioutil.ReadFile("./database/keys.json")
+	data, err := ioutil.ReadFile("./database/token.json")
 	checkError(err)
 	conf, err := google.JWTConfigFromJSON(data, spreadsheet.Scope)
 	checkError(err)
