@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	qrcode "github.com/skip2/go-qrcode"
+	//qrcode "github.com/skip2/go-qrcode"
 )
 
 var (
@@ -29,19 +29,19 @@ const (
 )
 
 func main() {
-	now := fmt.Sprintf("%v%s", time.Now().Unix(), test)
-	fmt.Println(now)
+	//now := fmt.Sprintf("%v%s", time.Now().Unix(), test)
+	//fmt.Println(now)
 	constants.GenerateCredentials()
 	database.Connect()
-	encText, err := Encrypt(now, key)
-	fmt.Println(encText)
-	if err != nil {
-		fmt.Println("error encrypting your classified text: ", err)
-	}
-	err = qrcode.WriteFile("https://example.org", qrcode.Medium, 256, "qr.png")
-	if err != nil {
-		panic(err)
-	}
+	//encText, err := Encrypt(now, key)
+	//fmt.Println(encText)
+	//if err != nil {
+	//	fmt.Println("error encrypting your classified text: ", err)
+	//}
+	//err = qrcode.WriteFile("https://example.org", qrcode.Medium, 256, "qr.png")
+	//if err != nil {
+	//	panic(err)
+	//}
 	r := gin.Default()
 	fmt.Println(botInit())
 	r.GET("/ping", func(c *gin.Context) {

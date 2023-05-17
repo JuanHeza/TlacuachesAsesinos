@@ -159,9 +159,7 @@ func GenerateCredentials() {
 		AuthProvider: "https://www.googleapis.com/oauth2/v1/certs",
 		ClientCert:   os.Getenv("sheet_client_x509_cert_url"),
 	}
-
 	jsonCoded, err := json.Marshal(credenciales)
-	fmt.Println(jsonCoded, err)
 
 	err = ioutil.WriteFile("./database/token.json", jsonCoded, 0644)
 	if err != nil {

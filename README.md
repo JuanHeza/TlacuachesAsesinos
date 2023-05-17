@@ -12,3 +12,7 @@ https://www.amazon.com.mx/dp/B09WJN83ZS/ref=sspa_dk_detail_2?pf_rd_p=f4b065a7-c2
 
 https://www.amazon.com.mx/dp/B09Q5MCFW3/ref=sspa_dk_detail_6?psc=1&pf_rd_p=f4b065a7-c255-43f0-a2c0-b69847ce06d2&pf_rd_r=Z1GAWCRYDNFEGRM0PXZJ&pd_rd_wg=gw64w&pd_rd_w=p8UeR&content-id=amzn1.sym.f4b065a7-c255-43f0-a2c0-b69847ce06d2&pd_rd_r=8c7c7dc8-6c0c-4ef4-b173-bddd388b57fd&s=electronics&sp_csd=d2lkZ2V0TmFtZT1zcF9kZXRhaWw&smid=A34XVXTBCHMT4Z&spLa=ZW5jcnlwdGVkUXVhbGlmaWVyPUFBSjdLOTJQUFlXVEMmZW5jcnlwdGVkSWQ9QTA1MzU3MTAzQTZVRlVFMTNQNjJDJmVuY3J5cHRlZEFkSWQ9QTA2MjAyNTMxM0U3RUkwUE1JQTJWJndpZGdldE5hbWU9c3BfZGV0YWlsJmFjdGlvbj1jbGlja1JlZGlyZWN0JmRvTm90TG9nQ2xpY2s9dHJ1ZQ==
 
+
+// https://github.com/meneer-code/Connect-Telegram-Bot-to-Google-Sheets-ChatGPT-OpenAI
+// https://developers.google.com/sheets/api/quickstart/go
+// https://developers.google.com/workspace/guides/create-project?authuser=1
