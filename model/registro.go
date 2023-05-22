@@ -25,21 +25,61 @@ type Registro struct {
 	Observaciones  string
 }
 
-func (rg *Registro) PrintEntradaMesage(msg string) string {
-	return fmt.Sprintf("%s\n\n%s:\n%s\n\n%s:\n%s\n\n%s:\n%s\n\n%s:\n%s\n\n%s:\n%v", msg, constants.Textos[constants.Idioma][constants.Const_rgtNom], rg.Nombre, constants.Textos[constants.Idioma][constants.Const_rgtCom], rg.Company, constants.Textos[constants.Idioma][constants.Const_rgtMot], rg.Motivo, constants.Textos[constants.Idioma][constants.Const_rgtCll], rg.Calle, constants.Textos[constants.Idioma][constants.Const_rgtExt], rg.NumeroExterior)
+func (rg *Registro) PrintRegistroMesage(msg string) string {
+	num := fmt.Sprint(rg.NumeroExterior)
+	if rg.NumeroExterior == 0 {
+		num = " "
+	}
+	return fmt.Sprintf("%s\n\n*%s*:   %s\n\n*%s*:   %s\n\n*%s*:   %s\n\n*%s*:   %s\n\n*%s*:   %v",
+		msg,
+		constants.GetValue(constants.Const_rgtNom), rg.Nombre,
+		constants.GetValue(constants.Const_rgtCom), rg.Company,
+		constants.GetValue(constants.Const_rgtMot), rg.Motivo,
+		constants.GetValue(constants.Const_rgtCll), rg.Calle,
+		constants.GetValue(constants.Const_rgtExt), num)
+}
+
+func (rg *Registro) Print() string {
+	return fmt.Sprintf("*Folio:* _%09d_ %v %v %v", rg.Folio, rg.PrintRegistroMesage(""), rg.PrintEntradaMesage(""), rg.PrintSalidaMesage(""))
 }
 
 func (rg *Registro) PrintSalidaMesage(msg string) string {
 	y, m, d := rg.FechaSalida.Date()
 	h, min, s := rg.HoraSalida.Clock()
-	date, hour := "\n", "\n"
+	date, hour := " ", " "
 	if !rg.FechaSalida.IsZero() {
 		date = fmt.Sprintf("%02d/%v/%04d", d, constants.PrintMes(int(m)), y)
 	}
 	if !rg.HoraSalida.IsZero() {
 		hour = fmt.Sprintf("%02d:%02d:%02d", h, min, s)
 	}
-	return fmt.Sprintf("%s\n\n%s:\n%s\n\n%s:\n%s", msg, constants.Textos[constants.Idioma][constants.Const_sldFch], date, constants.Textos[constants.Idioma][constants.Const_sldHra], hour)
+	return fmt.Sprintf("%s\n\n*%s*:   %s\n\n*%s*:   %s",
+		msg,
+		constants.GetValue(constants.Const_sldFch), date,
+		constants.GetValue(constants.Const_sldHra), hour)
+}
+
+func (rg *Registro) PrintEntradaMesage(msg string) string {
+	obser := ""
+	if rg.Observaciones != "" {
+		obser = rg.Observaciones
+	}
+	y, m, d := rg.FechaEntrada.Date()
+	h, min, s := rg.HoraEntrada.Clock()
+	date, hour := " ", " "
+	if !rg.FechaEntrada.IsZero() {
+		date = fmt.Sprintf("%02d/%v/%04d", d, constants.PrintMes(int(m)), y)
+	}
+	if !rg.HoraEntrada.IsZero() {
+		hour = fmt.Sprintf("%02d:%02d:%02d", h, min, s)
+	}
+	return fmt.Sprintf("%s\n\n*%s*:   %s\n\n*%s*:   %s\n\n*%s*:   %s\n\n*%s*:   %s\n\n*%s*:  \n%s",
+		msg,
+		constants.GetValue(constants.Const_entFab), rg.AutoFabricante,
+		constants.GetValue(constants.Const_entCol), rg.Color,
+		constants.GetValue(constants.Const_entFch), date,
+		constants.GetValue(constants.Const_entHra), hour,
+		constants.GetValue(constants.Const_entObs), obser)
 }
 
 func (rg *Registro) FillRegistro(campo constants.Inline, valor interface{}) {
@@ -58,4 +98,18 @@ func (rg *Registro) FillRegistro(campo constants.Inline, valor interface{}) {
 	case constants.Const_rgtMot:
 		rg.Motivo = fmt.Sprintf("%v", valor)
 	}
+}
+
+func (rg *Registro) CheckEntrada() bool{
+	if !(checkDate(rg.HoraEntrada) && checkDate(rg.FechaEntrada)) {
+		return false
+	}
+	return rg.AutoFabricante == "" && rg.Color == "" && rg.Observaciones == "" && rg.Identificacion == "" && rg.FotoVehiculo == ""
+}
+func (rg *Registro) CheckSalida() bool{
+	return checkDate(rg.HoraSalida) && checkDate(rg.FechaSalida)
+}
+
+func checkDate(input time.Time) bool {
+	return input.IsZero()
 }
