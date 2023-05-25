@@ -4,6 +4,7 @@ import (
 	"TlacuachesAsesinos/constants"
 	"TlacuachesAsesinos/model"
 	"fmt"
+    "log"
 	"io/ioutil"
 	"strconv"
 	"time"
@@ -17,7 +18,7 @@ var (
 	sp    spreadsheet.Spreadsheet
 	sheet *spreadsheet.Sheet
 )
-
+/*
 func main() {
 	//connect()
 	sheet, err := sp.SheetByIndex(0)
@@ -33,11 +34,12 @@ func main() {
 
 	// Make sure call Synchronize to reflect the changes
 	err = sheet.Synchronize()
-	checkError(err)
+	checkError(err,"")
 }
-
-func checkError(err error) {
+*/
+func checkError(err error, errString string ) {
 	if err != nil {
+        log.Println(errString)
 		panic(err.Error())
 	}
 }
@@ -116,22 +118,22 @@ func Save(rg model.Registro, row int) (string, int) {
 	sheet.Update(row, 13, clockS)
 	sheet.Update(row, 14, rg.Observaciones)
 	err := sheet.Synchronize()
-	checkError(err)
+	checkError(err, "Error on Update/Save")
 	return fmt.Sprintf("%09d - %v", row, rg.Nombre), row
 }
 
 func Connect() {
 	data, err := ioutil.ReadFile("./database/token.json")
-	checkError(err)
+	checkError(err,"file not found")
 	conf, err := google.JWTConfigFromJSON(data, spreadsheet.Scope)
-	checkError(err)
+	checkError(err,fmt.Sprintf("%s",data))
 	client := conf.Client(context.TODO())
 
 	service := spreadsheet.NewServiceWithClient(client)
 	spreadsheet, err := service.FetchSpreadsheet("1ytQV2XIoxR2TdiBiBIARRx5mg1v48kk7VF74eZ4LanQ")
-	checkError(err)
+	checkError(err,"No Sspreadsheet")
 	sp = spreadsheet
 
 	sheet, err = sp.SheetByIndex(0)
-	checkError(err)
+	checkError(err, "No Sheet")
 }
