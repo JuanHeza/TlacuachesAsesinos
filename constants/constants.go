@@ -56,6 +56,9 @@ const (
 	Const_visitante       Inline = "visitante"
 	Const_salida          Inline = "salida"
 	Const_delay           int16  = 5
+
+	Const_date_template string = "02/01/2006"
+	Const_time_template string = "15:04:05"
 )
 
 var (

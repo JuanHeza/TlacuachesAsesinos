@@ -53,26 +53,26 @@ func Search(index string) (rg model.Registro) {
 	}
 	folio, err := strconv.Atoi(sheet.Rows[row][0].Value)
 	if err == nil {
-		rg.Folio = int64(folio)
+		rg.Folio = folio
 		rg.Nombre = sheet.Rows[row][1].Value
 		rg.Motivo = sheet.Rows[row][2].Value
 		rg.Company = sheet.Rows[row][3].Value
 		rg.Calle = sheet.Rows[row][4].Value
-		rg.NumeroExterior = 9999999999999999
+		rg.NumeroExterior, _ = strconv.Atoi(sheet.Rows[row][5].Value)
 		rg.Identificacion = sheet.Rows[row][6].Value
 		rg.AutoFabricante = sheet.Rows[row][7].Value
 		rg.Color = sheet.Rows[row][8].Value
 		rg.FotoVehiculo = sheet.Rows[row][9].Value
-		rg.FechaEntrada = time.Now()
-		rg.HoraEntrada = time.Now()
-		rg.FechaSalida = time.Now()
-		rg.HoraSalida = time.Now()
+		rg.FechaEntrada, _ = time.Parse(constants.Const_date_template, sheet.Rows[row][10].Value)
+		rg.HoraEntrada, _ = time.Parse(constants.Const_time_template, sheet.Rows[row][11].Value)
+		rg.FechaSalida, _ = time.Parse(constants.Const_date_template, sheet.Rows[row][12].Value)
+		rg.HoraSalida, _ = time.Parse(constants.Const_time_template, sheet.Rows[row][13].Value)
 		rg.Observaciones = sheet.Rows[row][14].Value
 	}
 	return
 }
 
-func Save(rg model.Registro, row int) (string, int) {
+func Save(rg model.Registro, pantalla int) (string, int) {
 	dateS, dateE, clockS, clockE, numeroExterior := "", "", "", "", ""
 
 	yS, mS, dS := rg.FechaSalida.Date()
@@ -82,10 +82,10 @@ func Save(rg model.Registro, row int) (string, int) {
 	hE, minE, sE := rg.HoraEntrada.Clock()
 
 	if !rg.FechaSalida.IsZero() {
-		dateS = fmt.Sprintf("%02d/%v/%04d", dS, constants.PrintMes(int(mS)), yS)
+		dateS = fmt.Sprintf("%02d/%02d/%04d", dS, mS, yS)
 	}
 	if !rg.FechaSalida.IsZero() {
-		dateE = fmt.Sprintf("%02d/%v/%04d", dE, constants.PrintMes(int(mE)), yE)
+		dateE = fmt.Sprintf("%02d/%02d/%04d", dE, mE, yE)
 	}
 	if !rg.HoraSalida.IsZero() {
 		clockS = fmt.Sprintf("%02d:%02d:%02d", hS, minS, sS)
@@ -97,27 +97,32 @@ func Save(rg model.Registro, row int) (string, int) {
 		numeroExterior = fmt.Sprint(rg.NumeroExterior)
 	}
 
-	if row == 0 {
-		row = len(sheet.Data.GridData[0].RowData)
+	if rg.Folio == 0 {
+		rg.Folio = len(sheet.Data.GridData[0].RowData)
 	}
-	sheet.Update(row, 0, fmt.Sprintf("%05d", row))
-	sheet.Update(row, 1, rg.Nombre)
-	sheet.Update(row, 2, rg.Motivo)
-	sheet.Update(row, 3, rg.Company)
-	sheet.Update(row, 4, rg.Calle)
-	sheet.Update(row, 5, numeroExterior)
-	sheet.Update(row, 6, rg.Identificacion)
-	sheet.Update(row, 7, rg.AutoFabricante)
-	sheet.Update(row, 8, rg.Color)
-	sheet.Update(row, 9, rg.FotoVehiculo)
-	sheet.Update(row, 10, dateE)
-	sheet.Update(row, 11, clockE)
-	sheet.Update(row, 12, dateS)
-	sheet.Update(row, 13, clockS)
-	sheet.Update(row, 14, rg.Observaciones)
+	sheet.Update(rg.Folio, 0, fmt.Sprintf("%05d", rg.Folio))
+	switch pantalla {
+	case 0:
+		sheet.Update(rg.Folio, 1, rg.Nombre)
+		sheet.Update(rg.Folio, 2, rg.Motivo)
+		sheet.Update(rg.Folio, 3, rg.Company)
+		sheet.Update(rg.Folio, 4, rg.Calle)
+		sheet.Update(rg.Folio, 5, numeroExterior)
+	case 1:
+		sheet.Update(rg.Folio, 6, rg.Identificacion)
+		sheet.Update(rg.Folio, 7, rg.AutoFabricante)
+		sheet.Update(rg.Folio, 8, rg.Color)
+		sheet.Update(rg.Folio, 9, rg.FotoVehiculo)
+		sheet.Update(rg.Folio, 10, dateE)
+		sheet.Update(rg.Folio, 11, clockE)
+		sheet.Update(rg.Folio, 14, rg.Observaciones)
+	case 2:
+		sheet.Update(rg.Folio, 12, dateS)
+		sheet.Update(rg.Folio, 13, clockS)
+	}
 	err := sheet.Synchronize()
 	checkError(err)
-	return fmt.Sprintf("%09d - %v", row, rg.Nombre), row
+	return fmt.Sprintf("%09d - %v", rg.Folio, rg.Nombre), rg.Folio
 }
 
 func Connect() {

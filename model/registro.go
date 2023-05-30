@@ -13,7 +13,7 @@ type Registro struct {
 	Company        string
 	Calle          string
 	NumeroExterior int
-	Folio          int64
+	Folio          int
 	AutoFabricante string
 	Color          string
 	FechaEntrada   time.Time
@@ -100,13 +100,13 @@ func (rg *Registro) FillRegistro(campo constants.Inline, valor interface{}) {
 	}
 }
 
-func (rg *Registro) CheckEntrada() bool{
+func (rg *Registro) CheckEntrada() bool {
 	if !(checkDate(rg.HoraEntrada) && checkDate(rg.FechaEntrada)) {
 		return false
 	}
 	return rg.AutoFabricante == "" && rg.Color == "" && rg.Observaciones == "" && rg.Identificacion == "" && rg.FotoVehiculo == ""
 }
-func (rg *Registro) CheckSalida() bool{
+func (rg *Registro) CheckSalida() bool {
 	return checkDate(rg.HoraSalida) && checkDate(rg.FechaSalida)
 }
 

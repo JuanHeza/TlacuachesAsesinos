@@ -79,15 +79,18 @@ func handleMessage(update tgbotapi.Update) (tgbotapi.Chattable, bool) {
 		msg = startCommand(update.Message.Chat.ID)
 	default:
 		if actualQuery != "" {
+			var msgCallback tgbotapi.EditMessageTextConfig
 			if update.Message.Photo != nil {
 				fmt.Println(update.Message.Photo)
 				data := model.VisitanteMessage()
-				return tgbotapi.NewEditMessageTextAndMarkup(chatId, int(messageId), actualReg.PrintRegistroMesage(data.Message), data.Keyboard), true
+				msgCallback = tgbotapi.NewEditMessageTextAndMarkup(chatId, int(messageId), actualReg.PrintRegistroMesage(data.Message), data.Keyboard)
 			} else {
 				actualReg.FillRegistro(constants.ToInline(actualQuery), update.Message.Text)
 				data := model.VisitanteMessage()
-				return tgbotapi.NewEditMessageTextAndMarkup(chatId, int(messageId), actualReg.PrintRegistroMesage(data.Message), data.Keyboard), true
+				msgCallback = tgbotapi.NewEditMessageTextAndMarkup(chatId, int(messageId), actualReg.PrintRegistroMesage(data.Message), data.Keyboard)
 			}
+			msgCallback.ParseMode = "Markdown"
+			return msgCallback, true
 		}
 		return nil, false
 	}
@@ -178,12 +181,12 @@ func handleCallback(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 		msgCallback.ReplyMarkup = &data.Keyboard
 
 	case constants.Const_verFid:
-		pic := tgbotapi.File{FileUniqueID: "AQADtqcxG7xLWE9-", FileID: "AgACAgEAAxkBAAICIWRq_W07eDYR5RQvJbMETm1EBiTUAAK2pzEbvEtYTztoL_lFzerQAQADAgADeQADLwQ"}
-		bot.SendMediaGroup(tgbotapi.NewMediaGroup(update.CallbackQuery.From.ID, []interface{}{pic}))
+		pic := tgbotapi.FileID(actualReg.Identificacion)
+		bot.Send(tgbotapi.NewPhoto(update.CallbackQuery.Message.Chat.ID, pic))
 
 	case constants.Const_verFvh:
-		pic := tgbotapi.File{FileUniqueID: "AQADtqcxG7xLWE9-", FileID: "AgACAgEAAxkBAAICIWRq_W07eDYR5RQvJbMETm1EBiTUAAK2pzEbvEtYTztoL_lFzerQAQADAgADeQADLwQ"}
-		bot.SendMediaGroup(tgbotapi.NewMediaGroup(update.CallbackQuery.From.ID, []interface{}{pic}))
+		pic := tgbotapi.FileID(actualReg.FotoVehiculo)
+		bot.Send(tgbotapi.NewPhoto(update.CallbackQuery.Message.Chat.ID, pic))
 
 	case constants.Const_back:
 		data := model.HomeMessage()
