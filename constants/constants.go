@@ -67,6 +67,7 @@ var (
 	Host_name             = os.Getenv("HOST_NAME")
 	Secure_key            = os.Getenv("SECURE_STRING")
 	Session_key           = os.Getenv("SESSION_STRING")
+    Puerto = os.Getenv("PORT")
 	//textos[idioma][]
 	meses = map[Inline]([12]string){
 		Const_langEs: [12]string{
