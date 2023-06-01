@@ -54,23 +54,25 @@ func Search(index string) (rg model.Registro) {
 	if err != nil {
 		return
 	}
-	folio, err := strconv.Atoi(sheet.Rows[row][0].Value)
-	if err == nil {
-		rg.Folio = folio
-		rg.Nombre = sheet.Rows[row][1].Value
-		rg.Motivo = sheet.Rows[row][2].Value
-		rg.Company = sheet.Rows[row][3].Value
-		rg.Calle = sheet.Rows[row][4].Value
-		rg.NumeroExterior, _ = strconv.Atoi(sheet.Rows[row][5].Value)
-		rg.Identificacion = sheet.Rows[row][6].Value
-		rg.AutoFabricante = sheet.Rows[row][7].Value
-		rg.Color = sheet.Rows[row][8].Value
-		rg.FotoVehiculo = sheet.Rows[row][9].Value
-		rg.FechaEntrada, _ = time.Parse(constants.Const_date_template, sheet.Rows[row][10].Value)
-		rg.HoraEntrada, _ = time.Parse(constants.Const_time_template, sheet.Rows[row][11].Value)
-		rg.FechaSalida, _ = time.Parse(constants.Const_date_template, sheet.Rows[row][12].Value)
-		rg.HoraSalida, _ = time.Parse(constants.Const_time_template, sheet.Rows[row][13].Value)
-		rg.Observaciones = sheet.Rows[row][14].Value
+	if row < len(sheet.Rows) {
+		folio, err := strconv.Atoi(sheet.Rows[row][0].Value)
+		if err == nil && folio != 0 {
+			rg.Folio = folio
+			rg.Nombre = sheet.Rows[row][1].Value
+			rg.Motivo = sheet.Rows[row][2].Value
+			rg.Company = sheet.Rows[row][3].Value
+			rg.Calle = sheet.Rows[row][4].Value
+			rg.NumeroExterior, _ = strconv.Atoi(sheet.Rows[row][5].Value)
+			rg.Identificacion = sheet.Rows[row][6].Value
+			rg.AutoFabricante = sheet.Rows[row][7].Value
+			rg.Color = sheet.Rows[row][8].Value
+			rg.FotoVehiculo = sheet.Rows[row][9].Value
+			rg.FechaEntrada, _ = time.Parse(constants.Const_date_template, sheet.Rows[row][10].Value)
+			rg.HoraEntrada, _ = time.Parse(constants.Const_time_template, sheet.Rows[row][11].Value)
+			rg.FechaSalida, _ = time.Parse(constants.Const_date_template, sheet.Rows[row][12].Value)
+			rg.HoraSalida, _ = time.Parse(constants.Const_time_template, sheet.Rows[row][13].Value)
+			rg.Observaciones = sheet.Rows[row][14].Value
+		}
 	}
 	return
 }
@@ -87,13 +89,13 @@ func Save(rg model.Registro, pantalla int) (string, int) {
 	if !rg.FechaSalida.IsZero() {
 		dateS = fmt.Sprintf("%02d/%02d/%04d", dS, mS, yS)
 	}
-	if !rg.FechaSalida.IsZero() {
-		dateE = fmt.Sprintf("%02d/%02d/%04d", dE, mE, yE)
-	}
 	if !rg.HoraSalida.IsZero() {
 		clockS = fmt.Sprintf("%02d:%02d:%02d", hS, minS, sS)
 	}
-	if !rg.HoraSalida.IsZero() {
+	if !rg.FechaEntrada.IsZero() {
+		dateE = fmt.Sprintf("%02d/%02d/%04d", dE, mE, yE)
+	}
+	if !rg.HoraEntrada.IsZero() {
 		clockE = fmt.Sprintf("%02d:%02d:%02d", hE, minE, sE)
 	}
 	if rg.NumeroExterior != 0 {
@@ -142,4 +144,33 @@ func Connect() {
 
 	sheet, err = sp.SheetByIndex(0)
 	checkError(err, "No Sheet")
+}
+
+func SearchPage(offset int) (prev int, next int, buttons [][]string) {
+	prev = offset - 1
+	next = offset + 1
+	folios := []model.Registro{}
+	offset *= constants.Const_pages + 1
+	for i := offset; i <= offset+constants.Const_pages; i++ {
+		aux := i
+		if aux > len(sheet.Data.GridData[0].RowData) {
+			break
+		}
+		rg := Search(fmt.Sprint(aux))
+		if rg.Folio != 0 {
+			folios = append(folios, rg)
+		}
+	}
+	if offset == 0 {
+		prev = 0
+	}
+	var total = len(sheet.Data.GridData[0].RowData)
+	var curr = len(folios) + offset
+	if total == curr {
+		next -= 1
+	}
+	for _, rg := range folios {
+		buttons = append(buttons, []string{fmt.Sprintf("%09d - %v", rg.Folio, rg.Nombre), fmt.Sprint("Folio - ", rg.Folio)})
+	}
+	return
 }

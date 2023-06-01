@@ -12,6 +12,10 @@ import (
 type Inline string
 
 const (
+	Const_file_url      string = "https://docs.google.com/spreadsheets/d/1ytQV2XIoxR2TdiBiBIARRx5mg1v48kk7VF74eZ4LanQ/edit#gid=0"
+	Const_date_template string = "02/01/2006"
+	Const_time_template string = "15:04:05"
+
 	Const_langEn Inline = "en"
 	Const_langEs Inline = "es"
 
@@ -31,6 +35,8 @@ const (
 
 	Const_back   Inline = "back"
 	Const_ok     Inline = "ok"
+	Const_okEnt  Inline = "okSal"
+	Const_okSal  Inline = "okEnt"
 	Const_saludo Inline = "saludo"
 
 	Const_saludoSalida Inline = "Ingrese la siguiente informacion salida"
@@ -55,10 +61,12 @@ const (
 	Const_entrada         Inline = "entrada"
 	Const_visitante       Inline = "visitante"
 	Const_salida          Inline = "salida"
-	Const_delay           int16  = 5
 
-	Const_date_template string = "02/01/2006"
-	Const_time_template string = "15:04:05"
+	Const_delay        int16 = 5
+	Const_step_nuevo   int   = 0
+	Const_step_entrada int   = 1
+	Const_step_salida  int   = 2
+	Const_pages        int   = 5
 )
 
 var (
@@ -67,7 +75,7 @@ var (
 	Host_name             = os.Getenv("HOST_NAME")
 	Secure_key            = os.Getenv("SECURE_STRING")
 	Session_key           = os.Getenv("SESSION_STRING")
-    Puerto = os.Getenv("PORT")
+	Puerto                = os.Getenv("PORT")
 	//textos[idioma][]
 	meses = map[Inline]([12]string){
 		Const_langEs: [12]string{
@@ -75,6 +83,18 @@ var (
 		},
 		Const_langEn: [12]string{
 			"january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december",
+		},
+	}
+	Mensaje = map[Inline][]string{
+		Const_langEn: {
+			"Se han guardado los datos con el siguiente folio\n",
+			"Se ha registrado la entrada del siguiente folio\n",
+			"Se ha registrado la salida del siguiente folio\n",
+		},
+		Const_langEs: {
+			"Se han guardado los datos con el siguiente folio\n",
+			"Se ha registrado la entrada del siguiente folio\n",
+			"Se ha registrado la salida del siguiente folio\n",
 		},
 	}
 	Textos = map[Inline](map[Inline]string){
@@ -160,6 +180,22 @@ func GetValue(value Inline) string {
 	return Textos[Idioma][value]
 }
 
+func GetMessage(value int) string {
+	return Mensaje[Idioma][value]
+}
+
+func GetQuerry(step string) int {
+	switch ToInline(step) {
+	case Const_ok:
+		return Const_step_nuevo
+	case Const_okEnt:
+		return Const_step_entrada
+	case Const_okSal:
+		return Const_step_salida
+	}
+	return -1
+}
+
 func ToInline(data string) Inline {
 	return Inline(data)
 }
@@ -197,7 +233,9 @@ func GenerateCredentials() {
 		ClientCert:   os.Getenv("sheet_client_x509_cert_url"),
 	}
 	jsonCoded, err := json.Marshal(credenciales)
-
+	if err != nil {
+		log.Fatal(err)
+	}
 	err = ioutil.WriteFile("./database/token.json", jsonCoded, 0644)
 	if err != nil {
 		log.Fatal(err)

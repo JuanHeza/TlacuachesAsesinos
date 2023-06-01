@@ -61,6 +61,8 @@ func (rg *Registro) PrintSalidaMesage(msg string) string {
 
 func (rg *Registro) PrintEntradaMesage(msg string) string {
 	obser := ""
+	id := "\xE2\x9D\x8E"
+	vehi := "\xE2\x9D\x8E"
 	if rg.Observaciones != "" {
 		obser = rg.Observaciones
 	}
@@ -73,12 +75,20 @@ func (rg *Registro) PrintEntradaMesage(msg string) string {
 	if !rg.HoraEntrada.IsZero() {
 		hour = fmt.Sprintf("%02d:%02d:%02d", h, min, s)
 	}
-	return fmt.Sprintf("%s\n\n*%s*:   %s\n\n*%s*:   %s\n\n*%s*:   %s\n\n*%s*:   %s\n\n*%s*:  \n%s",
+	if rg.FotoVehiculo != "" {
+		vehi = "\xE2\x9C\x85"
+	}
+	if rg.Identificacion != "" {
+		id = "\xE2\x9C\x85"
+	}
+	return fmt.Sprintf("%s\n\n*%s*:   %s\n\n*%s*:   %s\n\n*%s*:   %s\n\n*%s*:   %s\n\n*%s*:  %s\n\n*%s*:  %s\n\n*%s*:  \n%s",
 		msg,
 		constants.GetValue(constants.Const_entFab), rg.AutoFabricante,
 		constants.GetValue(constants.Const_entCol), rg.Color,
 		constants.GetValue(constants.Const_entFch), date,
 		constants.GetValue(constants.Const_entHra), hour,
+		constants.GetValue(constants.Const_entFid), id,
+		constants.GetValue(constants.Const_entFvh), vehi,
 		constants.GetValue(constants.Const_entObs), obser)
 }
 
@@ -97,6 +107,12 @@ func (rg *Registro) FillRegistro(campo constants.Inline, valor interface{}) {
 		}
 	case constants.Const_rgtMot:
 		rg.Motivo = fmt.Sprintf("%v", valor)
+	case constants.Const_entFab:
+		rg.AutoFabricante = fmt.Sprintf("%v", valor)
+	case constants.Const_entCol:
+		rg.Color = fmt.Sprintf("%v", valor)
+	case constants.Const_entObs:
+		rg.Observaciones = fmt.Sprintf("%v", valor)
 	}
 }
 

@@ -6,6 +6,7 @@ import (
 	"TlacuachesAsesinos/model"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -81,13 +82,38 @@ func handleMessage(update tgbotapi.Update) (tgbotapi.Chattable, bool) {
 		if actualQuery != "" {
 			var msgCallback tgbotapi.EditMessageTextConfig
 			if update.Message.Photo != nil {
-				fmt.Println(update.Message.Photo)
-				data := model.VisitanteMessage()
-				msgCallback = tgbotapi.NewEditMessageTextAndMarkup(chatId, int(messageId), actualReg.PrintRegistroMesage(data.Message), data.Keyboard)
+				if actualQuery != "" && actualForm == constants.Const_rgtVst {
+					switch constants.ToInline(actualQuery) {
+					case constants.Const_entFid:
+						actualReg.Identificacion = update.Message.Photo[len(update.Message.Photo)-1].FileID
+					case constants.Const_entFvh:
+						actualReg.FotoVehiculo = update.Message.Photo[len(update.Message.Photo)-1].FileID
+					default:
+						return nil, false
+					}
+
+					data := model.EntradaMessage()
+					msgCallback = tgbotapi.NewEditMessageTextAndMarkup(chatId, int(messageId), actualReg.PrintEntradaMesage(data.Message), data.Keyboard)
+
+				} else {
+					return nil, false
+				}
 			} else {
+				var data model.Step
+				var message string
 				actualReg.FillRegistro(constants.ToInline(actualQuery), update.Message.Text)
-				data := model.VisitanteMessage()
-				msgCallback = tgbotapi.NewEditMessageTextAndMarkup(chatId, int(messageId), actualReg.PrintRegistroMesage(data.Message), data.Keyboard)
+				switch actualForm {
+				case constants.Const_rgtDir:
+					data = model.VisitanteMessage()
+					message = actualReg.PrintRegistroMesage(data.Message)
+				case constants.Const_rgtVst:
+					data = model.EntradaMessage()
+					message = actualReg.PrintEntradaMesage(data.Message)
+				case constants.Const_rgtSld:
+					data = model.SalidaMessage()
+					message = actualReg.PrintSalidaMesage(data.Message)
+				}
+				msgCallback = tgbotapi.NewEditMessageTextAndMarkup(chatId, int(messageId), message, data.Keyboard)
 			}
 			msgCallback.ParseMode = "Markdown"
 			return msgCallback, true
@@ -140,6 +166,7 @@ func handleCallback(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 
 	case constants.Const_rgtVst:
 		if actualReg.CheckEntrada() {
+			actualForm = constants.Const_rgtVst
 			data := model.EntradaMessage()
 			msgCallback.Text = actualReg.PrintEntradaMesage(data.Message)
 			msgCallback.ReplyMarkup = &data.Keyboard
@@ -160,7 +187,8 @@ func handleCallback(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 		msgCallback.ReplyMarkup = &data.Keyboard
 
 	case constants.Const_rgtSld:
-		if actualReg.CheckSalida() {
+		if actualReg.CheckSalida() && !actualReg.CheckEntrada() {
+			actualForm = constants.Const_rgtSld
 			data := model.SalidaMessage()
 			msgCallback.Text = actualReg.PrintSalidaMesage(data.Message)
 			msgCallback.ReplyMarkup = &data.Keyboard
@@ -193,23 +221,14 @@ func handleCallback(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 		msgCallback.Text = data.Message
 		msgCallback.ReplyMarkup = &data.Keyboard
 
-	case constants.Const_ok:
-		row, auxFolio := database.Save(actualReg, folio)
-		msgNew := tgbotapi.NewMessage(update.CallbackQuery.From.ID, fmt.Sprint("Se han guardado los datos con el siguiente folio\n", row))
-		msgNew.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(model.SearchKeyboard(auxFolio))
+	case constants.Const_ok, constants.Const_okEnt, constants.Const_okSal:
+		mensajeGuardar(update.CallbackData(), bot, update.CallbackQuery.From.ID, update.CallbackQuery.Message.MessageID)
 
-		bot.Send(tgbotapi.NewDeleteMessage(update.CallbackQuery.From.ID, update.CallbackQuery.Message.MessageID))
-		bot.Send(msgNew)
-		bot.Send(startCommand(update.CallbackQuery.Message.Chat.ID))
-
-	case constants.Const_langEs:
-		changeLenguage(update, *bot)
-
-	case constants.Const_langEn:
+	case constants.Const_langEs, constants.Const_langEn:
 		changeLenguage(update, *bot)
 
 	case constants.ToInline("Excel"):
-		bot.Send(tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "https://docs.google.com/spreadsheets/d/1ytQV2XIoxR2TdiBiBIARRx5mg1v48kk7VF74eZ4LanQ/edit#gid=0"))
+		bot.Send(tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, constants.Const_file_url))
 
 	case constants.ToInline("buscar"):
 		data := model.BusquedaMessage()
@@ -234,7 +253,13 @@ func handleCallback(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 		msgCallback.Text = "Ingrese el nombre"
 
 	case constants.ToInline("Lista"):
-		data := model.ListaMessage()
+		data := model.ListaMessage(database.SearchPage(0))
+		msgCallback.Text = data.Message
+		msgCallback.ReplyMarkup = &data.Keyboard
+
+	case constants.ToInline("Page"):
+		pagina, _ := strconv.Atoi(strings.Split(update.CallbackData(), " - ")[1])
+		data := model.ListaMessage(database.SearchPage(pagina))
 		msgCallback.Text = data.Message
 		msgCallback.ReplyMarkup = &data.Keyboard
 
@@ -266,5 +291,18 @@ func noModify(bot *tgbotapi.BotAPI, chatId int64) {
 	sended, ok := bot.Send(msgNew)
 	if ok == nil {
 		go delaySecond([]tgbotapi.Message{sended}, bot) // very useful for interval polling
+	}
+}
+
+func mensajeGuardar(query string, bot *tgbotapi.BotAPI, chatId int64, messageId int) {
+	step := constants.GetQuerry(query)
+	if step != -1 {
+		row, auxFolio := database.Save(actualReg, step)
+		msgNew := tgbotapi.NewMessage(chatId, fmt.Sprint(constants.GetMessage(step), row))
+		msgNew.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(model.SearchKeyboard(auxFolio))
+
+		bot.Send(tgbotapi.NewDeleteMessage(chatId, messageId))
+		bot.Send(msgNew)
+		bot.Send(startCommand(chatId))
 	}
 }

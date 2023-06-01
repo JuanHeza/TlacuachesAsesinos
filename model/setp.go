@@ -2,6 +2,7 @@ package model
 
 import (
 	"TlacuachesAsesinos/constants"
+	//"TlacuachesAsesinos/database"
 	"fmt"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -94,6 +95,7 @@ var (
 			),
 		}
 	}
+
 	VisitanteMessage = func() Step {
 		return Step{
 			Name:    constants.Const_entrada,
@@ -108,7 +110,11 @@ var (
 					tgbotapi.NewInlineKeyboardButtonData(constants.GetValue(constants.Const_rgtCll), string(constants.Const_rgtCll)),
 					tgbotapi.NewInlineKeyboardButtonData(constants.GetValue(constants.Const_rgtExt), string(constants.Const_rgtExt)),
 				),
-				MiniKeyboard(true)),
+				tgbotapi.NewInlineKeyboardRow(
+					tgbotapi.NewInlineKeyboardButtonData("Aceptar", string(constants.Const_ok)),
+					tgbotapi.NewInlineKeyboardButtonData("Cancelar", string(constants.Const_back)),
+				),
+			),
 		}
 	}
 
@@ -120,7 +126,6 @@ var (
 				tgbotapi.NewInlineKeyboardRow(
 					tgbotapi.NewInlineKeyboardButtonData(constants.GetValue(constants.Const_entFab), string(constants.Const_entFab)),
 					tgbotapi.NewInlineKeyboardButtonData(constants.GetValue(constants.Const_entCol), string(constants.Const_entCol)),
-					tgbotapi.NewInlineKeyboardButtonData(constants.GetValue(constants.Const_entFvh), string(constants.Const_entFvh)),
 				),
 				tgbotapi.NewInlineKeyboardRow(
 					tgbotapi.NewInlineKeyboardButtonData(constants.GetValue(constants.Const_entFch), string(constants.Const_entFch)),
@@ -128,9 +133,16 @@ var (
 				),
 				tgbotapi.NewInlineKeyboardRow(
 					tgbotapi.NewInlineKeyboardButtonData(constants.GetValue(constants.Const_entFid), string(constants.Const_entFid)),
+					tgbotapi.NewInlineKeyboardButtonData(constants.GetValue(constants.Const_entFvh), string(constants.Const_entFvh)),
+				),
+				tgbotapi.NewInlineKeyboardRow(
 					tgbotapi.NewInlineKeyboardButtonData(constants.GetValue(constants.Const_entObs), string(constants.Const_entObs)),
 				),
-				MiniKeyboard(true)),
+				tgbotapi.NewInlineKeyboardRow(
+					tgbotapi.NewInlineKeyboardButtonData("Aceptar", string(constants.Const_okEnt)),
+					tgbotapi.NewInlineKeyboardButtonData("Cancelar", string(constants.Const_back)),
+				),
+			),
 		}
 	}
 
@@ -143,7 +155,11 @@ var (
 					tgbotapi.NewInlineKeyboardButtonData(constants.GetValue(constants.Const_sldFch), string(constants.Const_sldFch)),
 					tgbotapi.NewInlineKeyboardButtonData(constants.GetValue(constants.Const_sldHra), string(constants.Const_sldHra)),
 				),
-				MiniKeyboard(true)),
+				tgbotapi.NewInlineKeyboardRow(
+					tgbotapi.NewInlineKeyboardButtonData("Aceptar", string(constants.Const_okSal)),
+					tgbotapi.NewInlineKeyboardButtonData("Cancelar", string(constants.Const_back)),
+				),
+			),
 		}
 	}
 
@@ -157,37 +173,34 @@ var (
 					tgbotapi.NewInlineKeyboardButtonData("Nombre", "Nombre"),
 					tgbotapi.NewInlineKeyboardButtonData("Lista", "Lista"),
 				),
-				MiniKeyboard(false),
+				tgbotapi.NewInlineKeyboardRow(
+					tgbotapi.NewInlineKeyboardButtonData("Cancelar", string(constants.Const_back)),
+				),
 			),
 		}
 	}
 
-	ListaMessage = func() Step {
+	ListaMessage = func(prev int, next int, data [][]string) Step {
+		var da = tgbotapi.NewInlineKeyboardMarkup()
+
+		for _, button := range data {
+			da.InlineKeyboard = append(da.InlineKeyboard,
+				tgbotapi.NewInlineKeyboardRow(
+					tgbotapi.NewInlineKeyboardButtonData(button[0], button[1]),
+				),
+			)
+		}
+		da.InlineKeyboard = append(da.InlineKeyboard, tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("Anterior", fmt.Sprint("Page - ", prev)),
+			tgbotapi.NewInlineKeyboardButtonData("Siguente", fmt.Sprint("Page - ", next)),
+		))
+		da.InlineKeyboard = append(da.InlineKeyboard, tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("Cancelar", string(constants.Const_back)),
+		))
 		return Step{
-			Name:    "lista",
-			Message: "Seleccione un folio de la siguiente lista",
-			Keyboard: tgbotapi.NewInlineKeyboardMarkup(
-				tgbotapi.NewInlineKeyboardRow(
-					tgbotapi.NewInlineKeyboardButtonData("FOLIO 1", "dummy"),
-				),
-				tgbotapi.NewInlineKeyboardRow(
-					tgbotapi.NewInlineKeyboardButtonData("FOLIO 2", "dummy"),
-				),
-				tgbotapi.NewInlineKeyboardRow(
-					tgbotapi.NewInlineKeyboardButtonData("FOLIO 3", "dummy"),
-				),
-				tgbotapi.NewInlineKeyboardRow(
-					tgbotapi.NewInlineKeyboardButtonData("FOLIO 4", "dummy"),
-				),
-				tgbotapi.NewInlineKeyboardRow(
-					tgbotapi.NewInlineKeyboardButtonData("FOLIO 5", "dummy"),
-				),
-				tgbotapi.NewInlineKeyboardRow(
-					tgbotapi.NewInlineKeyboardButtonData("Anterior", "dummy"),
-					tgbotapi.NewInlineKeyboardButtonData("Siguente", "dummy"),
-				),
-				MiniKeyboard(false),
-			),
+			Name:     "lista",
+			Message:  "Seleccione un folio de la siguiente lista",
+			Keyboard: da,
 		}
 	}
 )
