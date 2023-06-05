@@ -169,8 +169,8 @@ var (
 
 			Const_entHra: "Hora de entrada",
 			Const_entFch: "Fecha de entrada",
-			Const_entFab: "Fabricante",
-			Const_entCol: "Color",
+			Const_entFab: "Fabricante/Marca del vehiculo",
+			Const_entCol: "Color del vehiculo",
 			Const_entObs: "Observaciones",
 			Const_entFvh: "Foto Vehiculo",
 			Const_entFid: "Foto Identificacion",
