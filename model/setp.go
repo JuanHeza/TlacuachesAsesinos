@@ -58,7 +58,7 @@ var (
 		}
 	}
 
-	SearchKeyboard = func(folio int) []tgbotapi.InlineKeyboardButton {
+	SearchKeyboard = func(folio string) []tgbotapi.InlineKeyboardButton {
 		return tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("Ver Registro", fmt.Sprint("Folio - ", folio)),
 		)
@@ -182,7 +182,6 @@ var (
 
 	ListaMessage = func(prev int, next int, data [][]string) Step {
 		var da = tgbotapi.NewInlineKeyboardMarkup()
-
 		for _, button := range data {
 			da.InlineKeyboard = append(da.InlineKeyboard,
 				tgbotapi.NewInlineKeyboardRow(
@@ -190,10 +189,14 @@ var (
 				),
 			)
 		}
-		da.InlineKeyboard = append(da.InlineKeyboard, tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("Anterior", fmt.Sprint("Page - ", prev)),
-			tgbotapi.NewInlineKeyboardButtonData("Siguente", fmt.Sprint("Page - ", next)),
-		))
+		pages := tgbotapi.NewInlineKeyboardRow()
+		if prev != -1 {
+			pages = append(pages, tgbotapi.NewInlineKeyboardButtonData("Anterior", fmt.Sprint("Page - ", prev)))
+		}
+		if next != -1 {
+			pages = append(pages, tgbotapi.NewInlineKeyboardButtonData("Siguente", fmt.Sprint("Page - ", next)))
+		}
+		da.InlineKeyboard = append(da.InlineKeyboard, pages)
 		da.InlineKeyboard = append(da.InlineKeyboard, tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("Cancelar", string(constants.Const_back)),
 		))

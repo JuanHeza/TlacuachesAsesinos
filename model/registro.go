@@ -8,21 +8,28 @@ import (
 )
 
 type Registro struct {
-	Nombre         string
-	Motivo         string
-	Company        string
-	Calle          string
-	NumeroExterior int
-	Folio          int
-	AutoFabricante string
-	Color          string
-	FechaEntrada   time.Time
-	HoraEntrada    time.Time
-	FechaSalida    time.Time
-	HoraSalida     time.Time
-	Identificacion string
-	FotoVehiculo   string
-	Observaciones  string
+	//Id string `bson:"_id,omitempty"`
+
+	Nombre         string    `bson:"nombre,omitempty"`
+	Motivo         string    `bson:"motivo,omitempty"`
+	Company        string    `bson:"company,omitempty"`
+	Calle          string    `bson:"calle,omitempty"`
+	NumeroExterior int       `bson:"numero_exterior,omitempty"`
+	Folio          string    `bson:"folio,omitempty"`
+	AutoFabricante string    `bson:"auto_fabricante,omitempty"`
+	Color          string    `bson:"color,omitempty"`
+	FechaEntrada   time.Time `bson:"fecha_entrada,omitempty"`
+	HoraEntrada    time.Time `bson:"hora_entrada,omitempty"`
+	FechaSalida    time.Time `bson:"fecha_salida,omitempty"`
+	HoraSalida     time.Time `bson:"hora_salida,omitempty"`
+	Identificacion string    `bson:"identificacion,omitempty"`
+	FotoVehiculo   string    `bson:"foto_vehiculo,omitempty"`
+	Observaciones  string    `bson:"observaciones,omitempty"`
+
+	Estatus        constants.Estatus `bson:"estatus,omitempty"`
+	Creacion       time.Time         `bson:"creacion,omitempty"`
+	UsuarioCreador string            `bson:"usuario_creador,omitempty"`
+	Bot            string            `bson:"bot,omitempty"`
 }
 
 func (rg *Registro) PrintRegistroMesage(msg string) string {
@@ -40,7 +47,7 @@ func (rg *Registro) PrintRegistroMesage(msg string) string {
 }
 
 func (rg *Registro) Print() string {
-	return fmt.Sprintf("*Folio:* _%09d_ %v %v %v", rg.Folio, rg.PrintRegistroMesage(""), rg.PrintEntradaMesage(""), rg.PrintSalidaMesage(""))
+	return fmt.Sprintf("*Folio:* _%v_ %v %v %v", rg.Folio, rg.PrintRegistroMesage(""), rg.PrintEntradaMesage(""), rg.PrintSalidaMesage(""))
 }
 
 func (rg *Registro) PrintSalidaMesage(msg string) string {

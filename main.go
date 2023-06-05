@@ -8,7 +8,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/http"
-	_ "net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -31,8 +30,7 @@ const (
 func main() {
 	//now := fmt.Sprintf("%v%s", time.Now().Unix(), test)
 	//fmt.Println(now)
-	constants.GenerateCredentials()
-	database.Connect()
+	//database.Connect()
 	//encText, err := Encrypt(now, key)
 	//fmt.Println(encText)
 	//if err != nil {
@@ -42,26 +40,29 @@ func main() {
 	//if err != nil {
 	//	panic(err)
 	//}
-	r := gin.Default()
-	fmt.Println(botInit())
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "pong",
-		})
-	})
-	r.GET("/user/profile/:id", func(c *gin.Context) {
-		name := c.Param("id")
-		decText, err := Decrypt(name, key)
-		if err != nil || !IsValid(decText) {
-
-			c.AbortWithError(http.StatusInternalServerError, nil)
-		} else {
-			c.JSON(http.StatusOK, gin.H{
-				"message": decText,
+	_, err := database.CheckCollectionsExist()
+	if err == nil {
+		r := gin.Default()
+		fmt.Println(botInit())
+		r.GET("/ping", func(c *gin.Context) {
+			c.JSON(200, gin.H{
+				"message": "pong",
 			})
-		}
-	})
-	r.Run(fmt.Sprint(":",constants.Puerto)) // listen and serve on 0.0.0.0:8080
+		})
+		r.GET("/user/profile/:id", func(c *gin.Context) {
+			name := c.Param("id")
+			decText, err := Decrypt(name, key)
+			if err != nil || !IsValid(decText) {
+
+				c.AbortWithError(http.StatusInternalServerError, nil)
+			} else {
+				c.JSON(http.StatusOK, gin.H{
+					"message": decText,
+				})
+			}
+		})
+		r.Run(fmt.Sprint(":", constants.Puerto)) // listen and serve on 0.0.0.0:8080
+	}
 }
 
 func Encode(b []byte) string {
@@ -107,7 +108,7 @@ func IsValid(text string) bool {
 		if err != nil {
 			return false
 		}
-		return time.Now().Sub(time.Unix(aux, 0)).Seconds() < limit
+		return time.Since(time.Unix(aux, 0)).Seconds() < limit
 	} else {
 		return false
 	}

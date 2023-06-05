@@ -3,41 +3,71 @@ package database
 import (
 	"TlacuachesAsesinos/constants"
 	"TlacuachesAsesinos/model"
+	"context"
 	"fmt"
-	"io/ioutil"
+	_ "io/ioutil"
 	"log"
-	"strconv"
+	_ "strconv"
 	"time"
 
-	"golang.org/x/net/context"
-	"golang.org/x/oauth2/google"
-	"gopkg.in/Iwark/spreadsheet.v2"
+	//"golang.org/x/net/context"
+	//"golang.org/x/oauth2/google"
+	//"gopkg.in/Iwark/spreadsheet.v2"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var (
-	sp    spreadsheet.Spreadsheet
-	sheet *spreadsheet.Sheet
-)
-
-/*
-func main() {
-	//connect()
-	sheet, err := sp.SheetByIndex(0)
-	checkError(err)
-	for y, row := range sheet.Rows {
-		for x, cell := range row {
-			fmt.Println(x, y, cell.Value)
-		}
-	}
-
-	// Update cell content (row, column)
-	sheet.Update(1, 0, "hogehoge")
-
-	// Make sure call Synchronize to reflect the changes
-	err = sheet.Synchronize()
-	checkError(err,"")
+type Criteria struct {
+	Field       string
+	Restriction string
+	Value       interface{}
 }
-*/
+type MongoLocal struct{}
+
+func CheckCollectionsExist() (interface{}, error) {
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(constants.Mongo_uri))
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		if err := client.Disconnect(context.TODO()); err != nil {
+			panic(err)
+		}
+	}()
+	db := client.Database(constants.Mongo_database)
+	if err != nil {
+		// Handle error
+		log.Printf("Failed to get coll names: %v", err)
+		return nil, err
+	}
+	for _, collection := range constants.Mongo_CollectionNames {
+		//https://pkg.go.dev/go.mongodb.org/mongo-driver@v1.11.2/mongo#Database.CreateCollection
+		db.CreateCollection(context.TODO(), collection)
+	}
+	return true, nil
+}
+
+func Connect(criteria bson.M, collection string, fn func(ctx context.Context, criteria bson.M) (interface{}, error)) (interface{}, error) {
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(constants.Mongo_uri))
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		if err := client.Disconnect(context.TODO()); err != nil {
+			panic(err)
+		}
+	}()
+	//coll := client.Database(dt.Database_Name).Collection(collection)
+	output, err := fn(context.TODO(), criteria)
+	if err != nil {
+		log.Fatal(err)
+		return nil, err
+	}
+	return output, nil
+}
+
 func checkError(err error, errString string) {
 	if err != nil {
 		log.Println(errString)
@@ -45,41 +75,52 @@ func checkError(err error, errString string) {
 	}
 }
 
-func getCell(x, y int, sheet spreadsheet.Sheet) (cell spreadsheet.Cell) {
-	return sheet.Rows[x][y]
-}
-
-func Search(index string) (rg model.Registro) {
-	row, err := strconv.Atoi(index)
+func Search(folio, bot string) (rg model.Registro) {
+	res, err := findOne(BuildCriteria(BasicCriteria(bot, folio)), constants.Mongo_collection)
 	if err != nil {
 		return
 	}
-	if row < len(sheet.Rows) {
-		folio, err := strconv.Atoi(sheet.Rows[row][0].Value)
-		if err == nil && folio != 0 {
-			rg.Folio = folio
-			rg.Nombre = sheet.Rows[row][1].Value
-			rg.Motivo = sheet.Rows[row][2].Value
-			rg.Company = sheet.Rows[row][3].Value
-			rg.Calle = sheet.Rows[row][4].Value
-			rg.NumeroExterior, _ = strconv.Atoi(sheet.Rows[row][5].Value)
-			rg.Identificacion = sheet.Rows[row][6].Value
-			rg.AutoFabricante = sheet.Rows[row][7].Value
-			rg.Color = sheet.Rows[row][8].Value
-			rg.FotoVehiculo = sheet.Rows[row][9].Value
-			rg.FechaEntrada, _ = time.Parse(constants.Const_date_template, sheet.Rows[row][10].Value)
-			rg.HoraEntrada, _ = time.Parse(constants.Const_time_template, sheet.Rows[row][11].Value)
-			rg.FechaSalida, _ = time.Parse(constants.Const_date_template, sheet.Rows[row][12].Value)
-			rg.HoraSalida, _ = time.Parse(constants.Const_time_template, sheet.Rows[row][13].Value)
-			rg.Observaciones = sheet.Rows[row][14].Value
-		}
+	err = res.Decode(&rg)
+	if err != nil {
+		log.Println(err)
+		return
 	}
 	return
 }
 
-func Save(rg model.Registro, pantalla int) (string, int) {
-	dateS, dateE, clockS, clockE, numeroExterior := "", "", "", "", ""
+func SearchPage(offset int, bot string) (prev int, next int, buttons [][]string) {
+	prev = offset - 1
+	next = offset + 1
+	folios := []model.Registro{}
+	offset *= constants.Const_pages
 
+	ops := options.Find().SetSort(bson.D{{"folio", 1}}).SetSkip(int64(offset)).SetLimit(int64(constants.Const_pages))
+	res, total, err := findMany(BuildCriteria(BasicCriteria(bot, "")), constants.Mongo_collection, ops)
+	if err != nil {
+		log.Println(err)
+	}
+	log.Println(res)
+	if res == nil {
+		return
+	}
+	if err = res.All(context.TODO(), &folios); err != nil {
+		return //panic(err)
+	}
+
+	var curr = int64(len(folios) + offset)
+	if total == curr {
+		next = -1
+	}
+	for _, rg := range folios {
+		buttons = append(buttons, []string{fmt.Sprintf("%v - %v", rg.Folio, rg.Nombre), fmt.Sprint("Folio - ", rg.Folio)})
+	}
+	return
+}
+
+func Save(rg model.Registro, pantalla int) (string, string) {
+	dateS, dateE, clockS, clockE, numeroExterior := "", "", "", "", ""
+	var err error
+	var res interface{}
 	yS, mS, dS := rg.FechaSalida.Date()
 	hS, minS, sS := rg.HoraSalida.Clock()
 
@@ -102,75 +143,134 @@ func Save(rg model.Registro, pantalla int) (string, int) {
 		numeroExterior = fmt.Sprint(rg.NumeroExterior)
 	}
 
-	if rg.Folio == 0 {
-		rg.Folio = len(sheet.Data.GridData[0].RowData)
+	if rg.Folio == "" {
+		rg.Folio = fmt.Sprint(time.Now().Unix())
 	}
-	sheet.Update(rg.Folio, 0, fmt.Sprintf("%05d", rg.Folio))
-	switch pantalla {
-	case 0:
-		sheet.Update(rg.Folio, 1, rg.Nombre)
-		sheet.Update(rg.Folio, 2, rg.Motivo)
-		sheet.Update(rg.Folio, 3, rg.Company)
-		sheet.Update(rg.Folio, 4, rg.Calle)
-		sheet.Update(rg.Folio, 5, numeroExterior)
-	case 1:
-		sheet.Update(rg.Folio, 6, rg.Identificacion)
-		sheet.Update(rg.Folio, 7, rg.AutoFabricante)
-		sheet.Update(rg.Folio, 8, rg.Color)
-		sheet.Update(rg.Folio, 9, rg.FotoVehiculo)
-		sheet.Update(rg.Folio, 10, dateE)
-		sheet.Update(rg.Folio, 11, clockE)
-		sheet.Update(rg.Folio, 14, rg.Observaciones)
-	case 2:
-		sheet.Update(rg.Folio, 12, dateS)
-		sheet.Update(rg.Folio, 13, clockS)
+	if pantalla == 0 {
+		rg.Creacion = time.Now()
+		rg.Estatus = constants.Const_estatus_por_entrar
+		res, err = save(rg)
+	} else {
+		rg.Estatus = constants.Const_estatus_completo
+		if rg.FechaSalida.IsZero() && rg.HoraSalida.IsZero() {
+			rg.Estatus = constants.Const_estatus_por_salir
+
+		}
+		res, err = update(rg)
 	}
-	err := sheet.Synchronize()
 	checkError(err, "Error on Update/Save")
-	return fmt.Sprintf("%09d - %v", rg.Folio, rg.Nombre), rg.Folio
+	fmt.Println(dateS, dateE, clockS, clockE, numeroExterior, res)
+	return fmt.Sprintf("%v - %v", rg.Folio, rg.Nombre), rg.Folio
 }
 
-func Connect() {
-	data, err := ioutil.ReadFile("./database/token.json")
-	checkError(err, "file not found")
-	conf, err := google.JWTConfigFromJSON(data, spreadsheet.Scope)
-	checkError(err, fmt.Sprintf("%s", data))
-	client := conf.Client(context.TODO())
+func save(insert interface{}) (interface{}, error) {
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(constants.Mongo_uri))
+	if err != nil {
+		log.Println("database.go:192 ", err)
+		return nil, err
+	}
+	defer func() {
+		if err = client.Disconnect(context.TODO()); err != nil {
+			panic(err)
+		}
+	}()
 
-	service := spreadsheet.NewServiceWithClient(client)
-	spreadsheet, err := service.FetchSpreadsheet("1ytQV2XIoxR2TdiBiBIARRx5mg1v48kk7VF74eZ4LanQ")
-	checkError(err, "No Sspreadsheet")
-	sp = spreadsheet
+	// begin insertOne
+	coll := client.Database(constants.Mongo_database).Collection(constants.Mongo_collection)
+	result, err := coll.InsertOne(context.TODO(), insert)
+	if err != nil {
+		//panic(err)
+		log.Println("database.go:205 ", err)
+		return nil, err
+	}
 
-	sheet, err = sp.SheetByIndex(0)
-	checkError(err, "No Sheet")
+	log.Printf("Document inserted with ID: %s\n", result.InsertedID)
+	return result, nil
 }
 
-func SearchPage(offset int) (prev int, next int, buttons [][]string) {
-	prev = offset - 1
-	next = offset + 1
-	folios := []model.Registro{}
-	offset *= constants.Const_pages + 1
-	for i := offset; i <= offset+constants.Const_pages; i++ {
-		aux := i
-		if aux > len(sheet.Data.GridData[0].RowData) {
-			break
+func update(insert model.Registro) (interface{}, error) {
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(constants.Mongo_uri))
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		if err = client.Disconnect(context.TODO()); err != nil {
+			panic(err)
 		}
-		rg := Search(fmt.Sprint(aux))
-		if rg.Folio != 0 {
-			folios = append(folios, rg)
+	}()
+
+	// begin insertOne
+	coll := client.Database(constants.Mongo_database).Collection(constants.Mongo_collection)
+	result, err := coll.ReplaceOne(context.TODO(), bson.M{"folio": insert.Folio}, insert)
+	if err != nil {
+		//panic(err)
+		log.Println("database.go:216 ", err)
+		return nil, err
+	}
+
+	log.Printf("Document inserted with ID: %s\n", result.UpsertedID)
+	return result, nil
+}
+
+func findOne(criteria bson.M, collection string, opt ...*options.FindOptions) (*mongo.SingleResult, error) {
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(constants.Mongo_uri))
+	if err != nil {
+		log.Println("database.go:238 ", err)
+		return nil, err
+	}
+	defer func() {
+		if err := client.Disconnect(context.TODO()); err != nil {
+			panic(err)
+		}
+	}()
+	coll := client.Database(constants.Mongo_database).Collection(collection)
+	output := coll.FindOne(context.TODO(), criteria)
+	if err != nil {
+		log.Println("database.go:249 ", err)
+		return nil, err
+	}
+	return output, nil
+}
+func findMany(criteria bson.M, collection string, opt ...*options.FindOptions) (*mongo.Cursor, int64, error) {
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(constants.Mongo_uri))
+	if err != nil {
+		log.Println("database.go:238 ", err)
+		return nil, 0, err
+	}
+	defer func() {
+		if err := client.Disconnect(context.TODO()); err != nil {
+			panic(err)
+		}
+	}()
+	coll := client.Database(constants.Mongo_database).Collection(collection)
+	count, err := coll.CountDocuments(context.TODO(), criteria)
+	if err != nil {
+		panic(err)
+	}
+	output, err := coll.Find(context.TODO(), criteria, opt[0])
+	if err != nil {
+		log.Println("database.go:249 ", err)
+		return nil, 0, err
+	}
+	return output, count, nil
+}
+
+func BuildCriteria(criteria []Criteria) (multi bson.M) {
+	//var one interface{}
+	multi = bson.M{}
+	for _, ctr := range criteria {
+		if ctr.Restriction == "" {
+			multi[ctr.Field] = ctr.Value
+		} else {
+			multi[ctr.Field] = bson.D{{ctr.Restriction, ctr.Value}}
 		}
 	}
-	if offset == 0 {
-		prev = 0
-	}
-	var total = len(sheet.Data.GridData[0].RowData)
-	var curr = len(folios) + offset
-	if total == curr {
-		next -= 1
-	}
-	for _, rg := range folios {
-		buttons = append(buttons, []string{fmt.Sprintf("%09d - %v", rg.Folio, rg.Nombre), fmt.Sprint("Folio - ", rg.Folio)})
+	return
+}
+func BasicCriteria(bot, folio string) (criteria []Criteria) {
+	criteria = append(criteria, Criteria{Value: bot, Field: "bot"})
+	if folio != "" {
+		criteria = append(criteria, Criteria{Value: folio, Field: "folio"})
 	}
 	return
 }

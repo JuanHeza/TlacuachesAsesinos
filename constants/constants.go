@@ -10,8 +10,18 @@ import (
 )
 
 type Inline string
+type Estatus int
 
 const (
+	Const_estatus_por_entrar Estatus = 1
+	Const_estatus_por_salir  Estatus = 2
+	Const_estatus_completo   Estatus = 3
+
+	Mongo_collection       string = "Registros"
+	Mongo_collection_users string = "Usuarios"
+	Mongo_uri              string = "mongodb+srv://JuanHeza:1hCYw6lH9fF26Prs@evilpanda.cgorqpw.mongodb.net/?retryWrites=true&w=majority"
+	Mongo_database         string = "TlacuachesAsesinos"
+
 	Const_file_url      string = "https://docs.google.com/spreadsheets/d/1ytQV2XIoxR2TdiBiBIARRx5mg1v48kk7VF74eZ4LanQ/edit#gid=0"
 	Const_date_template string = "02/01/2006"
 	Const_time_template string = "15:04:05"
@@ -70,12 +80,13 @@ const (
 )
 
 var (
-	Idioma         Inline = "es"
-	Telegram_token        = os.Getenv("telegram_bot_token")
-	Host_name             = os.Getenv("HOST_NAME")
-	Secure_key            = os.Getenv("SECURE_STRING")
-	Session_key           = os.Getenv("SESSION_STRING")
-	Puerto                = os.Getenv("PORT")
+	Mongo_CollectionNames        = []string{Mongo_collection, Mongo_collection_users}
+	Idioma                Inline = "es"
+	Telegram_token               = os.Getenv("telegram_bot_token")
+	Host_name                    = os.Getenv("HOST_NAME")
+	Secure_key                   = os.Getenv("SECURE_STRING")
+	Session_key                  = os.Getenv("SESSION_STRING")
+	Puerto                       = os.Getenv("PORT")
 	//textos[idioma][]
 	meses = map[Inline]([12]string){
 		Const_langEs: [12]string{

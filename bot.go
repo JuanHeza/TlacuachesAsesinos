@@ -235,10 +235,13 @@ func handleCallback(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 		msgCallback.Text = "Seleccione su metodo de busqueda"
 		msgCallback.ReplyMarkup = &data.Keyboard
 
+	case constants.ToInline("Nombre"):
+		msgCallback.Text = "Ingrese el nombre"
+
 	case constants.ToInline("Folio"):
 		folioBuscar := strings.Split(update.CallbackData(), " - ")[1]
 		if folioBuscar != "0" {
-			actualReg = database.Search(folioBuscar)
+			actualReg = database.Search(folioBuscar, bot.Self.UserName)
 			constants.Print(actualReg)
 
 			newMsg := tgbotapi.NewMessage(update.CallbackQuery.From.ID, actualReg.Print())
@@ -248,18 +251,14 @@ func handleCallback(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 		} else {
 			msgCallback.Text = "Ingrese el folio"
 		}
-
-	case constants.ToInline("Nombre"):
-		msgCallback.Text = "Ingrese el nombre"
-
 	case constants.ToInline("Lista"):
-		data := model.ListaMessage(database.SearchPage(0))
+		data := model.ListaMessage(database.SearchPage(0, bot.Self.UserName))
 		msgCallback.Text = data.Message
 		msgCallback.ReplyMarkup = &data.Keyboard
 
 	case constants.ToInline("Page"):
 		pagina, _ := strconv.Atoi(strings.Split(update.CallbackData(), " - ")[1])
-		data := model.ListaMessage(database.SearchPage(pagina))
+		data := model.ListaMessage(database.SearchPage(pagina, bot.Self.UserName))
 		msgCallback.Text = data.Message
 		msgCallback.ReplyMarkup = &data.Keyboard
 
