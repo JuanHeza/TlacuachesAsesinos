@@ -169,8 +169,8 @@ var (
 			Message: constants.GetValue(constants.Const_salida),
 			Keyboard: tgbotapi.NewInlineKeyboardMarkup(
 				tgbotapi.NewInlineKeyboardRow(
-					tgbotapi.NewInlineKeyboardButtonData("Folio", "Folio - 0"),
-					tgbotapi.NewInlineKeyboardButtonData("Nombre", "Nombre"),
+					tgbotapi.NewInlineKeyboardButtonData("Folio", string(constants.Const_back)),  //"Folio - 0"),
+					tgbotapi.NewInlineKeyboardButtonData("Nombre", string(constants.Const_back)), //"Nombre"),
 					tgbotapi.NewInlineKeyboardButtonData("Lista", "Lista"),
 				),
 				tgbotapi.NewInlineKeyboardRow(
@@ -182,13 +182,13 @@ var (
 
 	ListaMessage = func(prev int, next int, data [][]string) Step {
 		var da = tgbotapi.NewInlineKeyboardMarkup()
-		for _, button := range data {
-			da.InlineKeyboard = append(da.InlineKeyboard,
-				tgbotapi.NewInlineKeyboardRow(
-					tgbotapi.NewInlineKeyboardButtonData(button[0], button[1]),
-				),
-			)
-		}
+			for _, button := range data {
+				da.InlineKeyboard = append(da.InlineKeyboard,
+					tgbotapi.NewInlineKeyboardRow(
+						tgbotapi.NewInlineKeyboardButtonData(button[0], button[1]),
+					),
+				)
+			}
 		pages := tgbotapi.NewInlineKeyboardRow()
 		if prev != -1 {
 			pages = append(pages, tgbotapi.NewInlineKeyboardButtonData("Anterior", fmt.Sprint("Page - ", prev)))
@@ -196,10 +196,13 @@ var (
 		if next != -1 {
 			pages = append(pages, tgbotapi.NewInlineKeyboardButtonData("Siguente", fmt.Sprint("Page - ", next)))
 		}
-		da.InlineKeyboard = append(da.InlineKeyboard, pages)
+        if len(pages) != 0{
+            da.InlineKeyboard = append(da.InlineKeyboard, pages)
+        }
 		da.InlineKeyboard = append(da.InlineKeyboard, tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("Cancelar", string(constants.Const_back)),
 		))
+		fmt.Println(da)
 		return Step{
 			Name:     "lista",
 			Message:  "Seleccione un folio de la siguiente lista",

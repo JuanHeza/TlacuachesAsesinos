@@ -72,7 +72,7 @@ const (
 	Const_visitante       Inline = "visitante"
 	Const_salida          Inline = "salida"
 
-	Const_delay        int16 = 5
+	Const_delay        int16 = 30
 	Const_step_nuevo   int   = 0
 	Const_step_entrada int   = 1
 	Const_step_salida  int   = 2

@@ -5,13 +5,16 @@ import (
 	"TlacuachesAsesinos/database"
 	"TlacuachesAsesinos/model"
 	"fmt"
+	"image"
+	"image/jpeg"
 	"log"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
+	qrlogo "github.com/divan/qrlogo"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	qrcode "github.com/skip2/go-qrcode"
 )
 
 var (
@@ -23,6 +26,16 @@ var (
 	msg         tgbotapi.MessageConfig
 	folio       = 0
 )
+
+/*
+https://www.manybooks.net/titles/doyleartetext94lostw10.html
+https://www.manybooks.net/titles/baumlfraetext93wizoz10.html
+https://www.manybooks.net/titles/wellshgetext92timem11.html
+https://www.manybooks.net/titles/russian-roulette
+https://www.manybooks.net/titles/first-magic
+https://www.manybooks.net/titles/marked
+https://www.manybooks.net/titles/grave-mistake
+*/
 
 func botInit() *tgbotapi.BotAPI {
 	bot, err := tgbotapi.NewBotAPI(constants.Telegram_token)
@@ -36,11 +49,11 @@ func botInit() *tgbotapi.BotAPI {
 
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
-
 	updates := bot.GetUpdatesChan(u)
 
 	for update := range updates {
 		print(update.Message)
+		//bot.Request(tgbotapi.NewChatAction(update.Message.Chat.ID, "typing"))
 		switch true {
 		case update.CallbackQuery != nil:
 			messageId = update.CallbackQuery.Message.MessageID
@@ -65,7 +78,7 @@ func botInit() *tgbotapi.BotAPI {
 				}
 			}
 		default:
-			fmt.Println("UNKNOWN")
+			//fmt.Println("UNKNOWN")
 			msg.Text = constants.Textos[constants.Idioma][constants.Const_error]
 		}
 	}
@@ -74,7 +87,7 @@ func botInit() *tgbotapi.BotAPI {
 
 func handleMessage(update tgbotapi.Update) (tgbotapi.Chattable, bool) {
 	log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
-	fmt.Println(update.Message.From.LanguageCode)
+	//fmt.Println(update.Message.From.LanguageCode)
 	switch update.Message.Text {
 	case "/start":
 		msg = startCommand(update.Message.Chat.ID)
@@ -131,26 +144,29 @@ func startCommand(Id int64) tgbotapi.MessageConfig {
 }
 
 func handleCallback(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
-	fmt.Println(update.CallbackData())
+	//fmt.Println(update.CallbackData())
 	msgCallback := tgbotapi.NewEditMessageTextAndMarkup(update.CallbackQuery.From.ID, update.CallbackQuery.Message.MessageID, "", tgbotapi.NewInlineKeyboardMarkup(model.MiniKeyboard(false)))
 	msgCallback.ParseMode = "Markdown"
 
 	switch constants.ToInline(strings.Split(update.CallbackData(), " - ")[0]) {
 	case constants.Const_qrCode:
-		now := fmt.Sprintf("%v%s", time.Now().Unix(), constants.Session_key)
-		fmt.Println(now)
+		now := fmt.Sprintf("%v@%s %s", time.Now().Unix(), update.CallbackQuery.From.UserName, constants.Session_key)
 		encText, err := Encrypt(now, key)
-		fmt.Println(encText)
+		//fmt.Println("==========",now, "=================", encText, "===========")
 		if err != nil {
 			msg.Text = fmt.Sprint("error encrypting your classified text: ", err)
 		} else {
-			encoded, _ := qrcode.Encode(encText, qrcode.Medium, 256)
+
+			bot.Request(tgbotapi.NewChatAction(update.CallbackQuery.From.ID, "upload_photo"))
+			image, err := downloadFile(bot, "bot.jpg")
+			//fmt.Println("decode", err)
+			logo, _ := qrlogo.Encode(encText, image, 2048)
 			file := tgbotapi.FileBytes{
 				Name:  "QR_CODE.jpg",
-				Bytes: encoded,
+				Bytes: logo.Bytes(),
 			}
 			pic := tgbotapi.NewInputMediaPhoto(file)
-			pic.Caption = "Este mensaje se eliminara en 5 segundos"
+			pic.Caption = fmt.Sprintf("Este mensaje se eliminara en %v segundos", constants.Const_delay)
 			msgPic, err := bot.SendMediaGroup(tgbotapi.NewMediaGroup(update.CallbackQuery.From.ID, []interface{}{pic}))
 			if err == nil {
 				go delaySecond(msgPic, bot) // very useful for interval polling
@@ -304,4 +320,27 @@ func mensajeGuardar(query string, bot *tgbotapi.BotAPI, chatId int64, messageId 
 		bot.Send(msgNew)
 		bot.Send(startCommand(chatId))
 	}
+}
+
+func downloadFile(bot *tgbotapi.BotAPI, filepath string) (image.Image, error) {
+
+	me, _ := bot.GetMe()
+	ph, _ := bot.GetUserProfilePhotos(tgbotapi.UserProfilePhotosConfig{
+		UserID: me.ID,
+		Offset: 0,
+		Limit:  1,
+	})
+	phs := ph.Photos[0]
+	tf, _ := bot.GetFile(tgbotapi.FileConfig{
+		FileID: phs[len(phs)-1].FileID,
+	})
+	url := fmt.Sprintf("https://api.telegram.org/file/bot%v/%v", constants.Telegram_token, tf.FilePath)
+	// Get the data
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	return jpeg.Decode(resp.Body)
 }
